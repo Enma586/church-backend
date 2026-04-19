@@ -1,17 +1,13 @@
+import { AppError } from '../utils/AppError.js';
+
 export const roleGuard = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'No autenticado'
-            });
+            return next(new AppError('No autenticado', 401));
         }
 
         if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: 'No tienes permisos para realizar esta acción'
-            });
+            return next(new AppError('No tienes permisos para realizar esta acción', 403));
         }
 
         next();

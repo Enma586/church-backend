@@ -1,9 +1,7 @@
 import Joi from 'joi';
 import { paginationFields } from '../pagination.js';
+import { USER_ROLE } from '../../constants/index.js';
 
-/**
- * @description Validation schema for User creation.
- */
 const createUserSchema = Joi.object({
     memberId: Joi.string()
         .hex()
@@ -29,15 +27,12 @@ const createUserSchema = Joi.object({
             'any.required': 'La contraseña es requerida'
         }),
     role: Joi.string()
-        .valid('Administrador', 'Empleado')
+        .valid(...USER_ROLE)
         .default('Empleado'),
     isActive: Joi.boolean()
         .default(true)
 });
 
-/**
- * @description Validation schema for User updates.
- */
 const updateUserSchema = Joi.object({
     username: Joi.string()
         .trim()
@@ -47,15 +42,12 @@ const updateUserSchema = Joi.object({
         .min(6)
         .optional(),
     role: Joi.string()
-        .valid('Administrador', 'Empleado')
+        .valid(...USER_ROLE)
         .optional(),
     isActive: Joi.boolean()
         .optional()
 }).min(1);
 
-/**
- * @description Validation schema for User login.
- */
 const loginUserSchema = Joi.object({
     username: Joi.string()
         .trim()
@@ -74,7 +66,7 @@ const loginUserSchema = Joi.object({
 const queryUserSchema = Joi.object({
     ...paginationFields,
     role: Joi.string()
-        .valid('Administrador', 'Empleado')
+        .valid(...USER_ROLE)
         .optional(),
     isActive: Joi.boolean()
         .optional(),

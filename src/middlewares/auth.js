@@ -1,52 +1,38 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/members/User.js';
+import { AppError } from '../utils/AppError.js';
+import { env } from '../config/env.js';
 
 export const auth = async (req, res, next) => {
     try {
         const token = req.cookies.token;
 
         if (!token) {
-            const error = new Error('No se proporcionó token de autenticación');
-            error.statusCode = 401;
-            throw error;
+            throw new AppError('No se proporcionó token de autenticación', 401);
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId);
+        const decoded = jwt.verify(token, env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('+password +isActive');
 
         if (!user) {
-            const error = new Error('Token inválido - usuario no encontrado');
-            error.statusCode = 401;
-            throw error;
+            throw new AppError('Token inválido - usuario no encontrado', 401);
         }
 
         if (!user.isActive) {
-            const error = new Error('Tu cuenta ha sido desactivada');
-            error.statusCode = 401;
-            throw error;
+            throw new AppError('Tu cuenta ha sido desactivada', 401);
         }
 
         req.user = user;
         next();
     } catch (err) {
         if (err.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                success: false,
-                message: 'Token inválido'
-            });
+            return next(new AppError('Token inválido', 401));
         }
 
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                success: false,
-                message: 'Token expirado'
-            });
+            return next(new AppError('Token expirado', 401));
         }
 
-        const statusCode = err.statusCode || 500;
-        res.status(statusCode).json({
-            success: false,
-            message: err.message
-        });
+        next(err);
     }
 };

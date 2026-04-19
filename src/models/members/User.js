@@ -1,15 +1,12 @@
 import mongoose from 'mongoose';
+import { USER_ROLE } from '../../constants/index.js';
 
-/**
- * @description Security and access control schema.
- * Linked directly to a Member profile.
- */
 const userSchema = new mongoose.Schema({
     memberId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Member',
         required: [true, 'El usuario debe estar vinculado a un perfil de Miembro'],
-        unique: true // One user account per member
+        unique: true
     },
     username: {
         type: String,
@@ -21,11 +18,11 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es requerida'],
-        description: 'Contraseña cifrada para acceso al sistema'
+        select: false
     },
     role: {
         type: String,
-        enum: ['Administrador', 'Empleado'],
+        enum: USER_ROLE,
         default: 'Empleado',
         required: true
     },

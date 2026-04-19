@@ -1,15 +1,11 @@
 import * as UserService from "../../services/members/User.js";
 import jwt from "jsonwebtoken";
-import { TOKEN_SECRET, TOKEN_EXPIRES_IN } from "../../../config.js";
+import { env } from "../../config/env.js";
 
-/**
- * @description System Login: Validates credentials and sets HTTP-only cookie.
- */
 export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
-    // 1. Find user and check password
     const user = await UserService.findUserByUsername(username);
     if (
       !user ||
@@ -26,20 +22,17 @@ export const login = async (req, res, next) => {
         .json({ success: false, message: "Cuenta de usuario desactivada" });
     }
 
-    // 2. Generate JWT
-    const token = jwt.sign({ id: user._id, role: user.role }, TOKEN_SECRET, {
-      expiresIn: TOKEN_EXPIRES_IN,
+    const token = jwt.sign({ id: user._id, role: user.role }, env.JWT_SECRET, {
+      expiresIn: env.JWT_EXPIRES_IN,
     });
 
-    // 3. Set HTTP-only Cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -49,9 +42,6 @@ export const login = async (req, res, next) => {
   }
 };
 
-/**
- * @description System Logout: Clears the auth cookie.
- */
 export const logout = (req, res) => {
   res.clearCookie("token");
   res
@@ -59,17 +49,10 @@ export const logout = (req, res) => {
     .json({ success: true, message: "Sesión cerrada exitosamente" });
 };
 
-/**
- * @description Get current authenticated user profile (Check Auth).
- */
 export const me = async (req, res) => {
-  // req.user comes from the 'auth' middleware
   res.status(200).json({ success: true, data: req.user });
 };
 
-/**
- * @description Verify token validity using auth middleware.
- */
 export const verifyToken = async (req, res, next) => {
   try {
     res.status(200).json({ success: true, data: req.user });
@@ -78,10 +61,15 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
-/**
- * @description Standard User CRUD (findAll, create, etc.)
- * used primarily by Admins to manage staff.
- */
+export const findAll = async (req, res, next) => {
+  try {
+    const result = await UserService.findAllUsers(req.query);
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const create = async (req, res, next) => {
   try {
     const user = await UserService.createUser(req.body);

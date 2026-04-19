@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { Configuration } from '../../models/index.js';
+import { env } from '../../config/env.js';
 
 const MAX_RETRIES        = 3;
 const BASE_DELAY_MS      = 1000;
@@ -57,8 +58,8 @@ const validateDates = (startDateTime, endDateTime) => {
 const getAuthClient = async () => {
     const config = await Configuration.findOne();
 
-    const clientEmail = config?.googleServiceAccountEmail || process.env.GOOGLE_CLIENT_EMAIL;
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientEmail = config?.googleServiceAccountEmail || env.GOOGLE_CLIENT_EMAIL;
+    const privateKey = env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
     if (!clientEmail || !privateKey) {
         throw new Error(
@@ -84,7 +85,7 @@ const getAuthClient = async () => {
 
 const getCalendarId = async () => {
     const config = await Configuration.findOne();
-    return config?.googleCalendarId || process.env.GOOGLE_CALENDAR_ID || 'primary';
+    return config?.googleCalendarId || env.GOOGLE_CALENDAR_ID || 'primary';
 };
 
 const getCalendarService = async () => {
@@ -122,17 +123,20 @@ const withRetry = async (fn, context = 'Google Calendar') => {
     throw lastError;
 };
 
+const getTimezone = () => env.TZ;
+
 export const createCalendarEvent = async ({ title, description, startDateTime, endDateTime }) => {
     const { start, end } = validateDates(startDateTime, endDateTime);
 
     const calendar = await getCalendarService();
     const calendarId = await getCalendarId();
+    const tz = getTimezone();
 
     const event = {
         summary: sanitizeString(title, 200),
         description: sanitizeString(description, 5000),
-        start: { dateTime: start.toISOString(), timeZone: 'America/El_Salvador' },
-        end:   { dateTime: end.toISOString(),   timeZone: 'America/El_Salvador' },
+        start: { dateTime: start.toISOString(), timeZone: tz },
+        end:   { dateTime: end.toISOString(),   timeZone: tz },
     };
 
     const response = await withRetry(
@@ -159,12 +163,13 @@ export const updateCalendarEvent = async (googleEventId, { title, description, s
 
     const calendar = await getCalendarService();
     const calendarId = await getCalendarId();
+    const tz = getTimezone();
 
     const event = {};
     if (title !== undefined)       event.summary     = sanitizeString(title, 200);
     if (description !== undefined) event.description  = sanitizeString(description, 5000);
-    if (startDateTime)             event.start        = { dateTime: new Date(startDateTime).toISOString(), timeZone: 'America/El_Salvador' };
-    if (endDateTime)               event.end          = { dateTime: new Date(endDateTime).toISOString(),   timeZone: 'America/El_Salvador' };
+    if (startDateTime)             event.start        = { dateTime: new Date(startDateTime).toISOString(), timeZone: tz };
+    if (endDateTime)               event.end          = { dateTime: new Date(endDateTime).toISOString(),   timeZone: tz };
 
     await withRetry(
         () => calendar.events.patch({

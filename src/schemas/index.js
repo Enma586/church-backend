@@ -51,6 +51,11 @@ import {
     paginationSchema
 } from './pagination.js';
 
+// 7. Params
+import {
+    paramsIdSchema
+} from './params.js';
+
 /**
  * Clean export of all schemas.
  * Usage: import { createMemberSchema, loginUserSchema } from './schemas/index.js';
@@ -79,5 +84,6 @@ export {
     createPastoralNoteSchema,
     updatePastoralNoteSchema,
     queryPastoralNoteSchema,
-    paginationSchema
+    paginationSchema,
+    paramsIdSchema
 };

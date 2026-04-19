@@ -1,9 +1,6 @@
 import Joi from 'joi';
 import { paginationFields } from '../pagination.js';
 
-/**
- * @description Validation schema for PastoralNote creation.
- */
 const createPastoralNoteSchema = Joi.object({
     memberId: Joi.string()
         .hex()
@@ -11,13 +8,6 @@ const createPastoralNoteSchema = Joi.object({
         .required()
         .messages({
             'any.required': 'La nota debe estar vinculada a un miembro'
-        }),
-    authorId: Joi.string()
-        .hex()
-        .length(24)
-        .required()
-        .messages({
-            'any.required': 'Se requiere un autor (Usuario) para responsabilidad'
         }),
     content: Joi.string()
         .trim()
@@ -30,9 +20,6 @@ const createPastoralNoteSchema = Joi.object({
         .default(false)
 });
 
-/**
- * @description Validation schema for PastoralNote updates.
- */
 const updatePastoralNoteSchema = Joi.object({
     content: Joi.string()
         .trim()

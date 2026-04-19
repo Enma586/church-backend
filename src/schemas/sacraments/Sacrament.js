@@ -1,9 +1,7 @@
 import Joi from 'joi';
 import { paginationFields } from '../pagination.js';
+import { SACRAMENT_TYPE } from '../../constants/index.js';
 
-/**
- * @description Validation schema for Sacrament creation.
- */
 const createSacramentSchema = Joi.object({
     memberId: Joi.string()
         .hex()
@@ -13,7 +11,7 @@ const createSacramentSchema = Joi.object({
             'any.required': 'Un sacramento debe estar vinculado a un miembro'
         }),
     type: Joi.string()
-        .valid('Bautismo', 'Primera Comunión', 'Confirmación', 'Matrimonio', 'Unción de los Enfermos')
+        .valid(...SACRAMENT_TYPE)
         .required()
         .messages({
             'any.required': 'El tipo de sacramento es requerido'
@@ -39,12 +37,9 @@ const createSacramentSchema = Joi.object({
         .optional()
 });
 
-/**
- * @description Validation schema for Sacrament updates.
- */
 const updateSacramentSchema = Joi.object({
     type: Joi.string()
-        .valid('Bautismo', 'Primera Comunión', 'Confirmación', 'Matrimonio', 'Unción de los Enfermos')
+        .valid(...SACRAMENT_TYPE)
         .optional(),
     date: Joi.date()
         .optional(),
@@ -67,7 +62,7 @@ const updateSacramentSchema = Joi.object({
 const querySacramentSchema = Joi.object({
     ...paginationFields,
     type: Joi.string()
-        .valid('Bautismo', 'Primera Comunión', 'Confirmación', 'Matrimonio', 'Unción de los Enfermos')
+        .valid(...SACRAMENT_TYPE)
         .optional(),
     memberId: Joi.string()
         .hex()

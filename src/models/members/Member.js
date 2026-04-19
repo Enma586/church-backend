@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
+import { GENDER, MEMBER_STATUS, FAMILY_RELATIONSHIP } from '../../constants/index.js';
 
-/**
- * @description Core schema for personal identity.
- * Includes contact info, geographic location, and family ties.
- */
 const memberSchema = new mongoose.Schema({
     fullName: {
         type: String,
@@ -17,22 +14,18 @@ const memberSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['Masculino', 'Femenino'],
+        enum: GENDER,
         required: true
     },
-    // Contact Information
     phone: {
         type: String,
-        trim: true,
-        description: 'Número de contacto principal para notificaciones de WhatsApp'
+        trim: true
     },
     email: {
         type: String,
         lowercase: true,
-        trim: true,
-        description: 'Correo personal para invitaciones de Google Calendar'
+        trim: true
     },
-    // Geographic Reference (Honduras Address)
     departmentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Department',
@@ -45,25 +38,20 @@ const memberSchema = new mongoose.Schema({
     },
     addressDetails: {
         type: String,
-        trim: true,
-        description: 'Barrio o dirección específica'
+        trim: true
     },
-    /**
-     * @section Family Relationships
-     * Embedded array to maintain the family core without extra collections.
-     */
     family: [{
         name: { type: String, required: true },
         relationship: { 
             type: String, 
             required: true,
-            enum: ['Padre', 'Madre', 'Cónyuge', 'Hijo/a', 'Hermano/a', 'Tutor', 'Otro']
+            enum: FAMILY_RELATIONSHIP
         },
         isMember: { type: Boolean, default: false }
     }],
     status: {
         type: String,
-        enum: ['Activo', 'Inactivo'],
+        enum: MEMBER_STATUS,
         default: 'Activo'
     }
 }, {

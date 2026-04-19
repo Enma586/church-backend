@@ -1,9 +1,7 @@
 import Joi from 'joi';
 import { paginationFields } from '../pagination.js';
+import { GENDER, MEMBER_STATUS, FAMILY_RELATIONSHIP } from '../../constants/index.js';
 
-/**
- * @description Validation schema for Member creation.
- */
 const createMemberSchema = Joi.object({
     fullName: Joi.string()
         .trim()
@@ -18,7 +16,7 @@ const createMemberSchema = Joi.object({
             'any.required': 'La fecha de nacimiento es requerida'
         }),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino')
+        .valid(...GENDER)
         .required(),
     phone: Joi.string()
         .trim()
@@ -44,20 +42,17 @@ const createMemberSchema = Joi.object({
             Joi.object({
                 name: Joi.string().trim().required(),
                 relationship: Joi.string()
-                    .valid('Padre', 'Madre', 'Cónyuge', 'Hijo/a', 'Hermano/a', 'Tutor', 'Otro')
+                    .valid(...FAMILY_RELATIONSHIP)
                     .required(),
                 isMember: Joi.boolean().default(false)
             })
         )
         .optional(),
     status: Joi.string()
-        .valid('Activo', 'Inactivo')
+        .valid(...MEMBER_STATUS)
         .default('Activo')
 });
 
-/**
- * @description Validation schema for Member updates.
- */
 const updateMemberSchema = Joi.object({
     fullName: Joi.string()
         .trim()
@@ -65,7 +60,7 @@ const updateMemberSchema = Joi.object({
     dateOfBirth: Joi.date()
         .optional(),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino')
+        .valid(...GENDER)
         .optional(),
     phone: Joi.string()
         .trim()
@@ -91,24 +86,24 @@ const updateMemberSchema = Joi.object({
             Joi.object({
                 name: Joi.string().trim().required(),
                 relationship: Joi.string()
-                    .valid('Padre', 'Madre', 'Cónyuge', 'Hijo/a', 'Hermano/a', 'Tutor', 'Otro')
+                    .valid(...FAMILY_RELATIONSHIP)
                     .required(),
                 isMember: Joi.boolean().default(false)
             })
         )
         .optional(),
     status: Joi.string()
-        .valid('Activo', 'Inactivo')
+        .valid(...MEMBER_STATUS)
         .optional()
 }).min(1);
 
 const queryMemberSchema = Joi.object({
     ...paginationFields,
     status: Joi.string()
-        .valid('Activo', 'Inactivo')
+        .valid(...MEMBER_STATUS)
         .optional(),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino')
+        .valid(...GENDER)
         .optional(),
     departmentId: Joi.string()
         .hex()

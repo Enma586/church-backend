@@ -1,5 +1,5 @@
 import { Appointment } from '../../models/index.js';
-import { getPagination, getPagingData } from '../../utils/pagination.js';
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import {
     createCalendarEvent,
     updateCalendarEvent,
@@ -36,7 +36,6 @@ export const createAppointment = async (data) => {
 
 export const findAllAppointments = async (query) => {
     const { page, limit, status, memberId, search, dateFrom, dateTo } = query;
-    const { skip, limit: pageSize } = getPagination(page, limit);
 
     const filter = {};
     if (status) filter.status = status;
@@ -48,48 +47,33 @@ export const findAllAppointments = async (query) => {
         if (dateTo) filter.startDateTime.$lte = new Date(dateTo);
     }
 
-    const { docs } = await Appointment.aggregate([
-        { $match: filter },
-        { $sort: { startDateTime: 1 } },
-        { $facet: {
-            metadata: [{ $count: 'total' }],
-            data: [
-                { $skip: skip },
-                { $limit: pageSize },
-                {
-                    $lookup: {
-                        from: 'members',
-                        localField: 'memberId',
-                        foreignField: '_id',
-                        as: 'member'
-                    }
-                },
-                { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } },
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: 'createdBy',
-                        foreignField: '_id',
-                        as: 'creator'
-                    }
-                },
-                { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        'creator.password': 0
-                    }
+    return await aggregatePaginate(Appointment, {
+        filter,
+        sort: { startDateTime: 1 },
+        page,
+        limit,
+        lookups: [
+            {
+                $lookup: {
+                    from: 'members',
+                    localField: 'memberId',
+                    foreignField: '_id',
+                    as: 'member'
                 }
-            ]
-        }}
-    ]);
-
-    const total = docs[0]?.metadata[0]?.total ?? 0;
-    const data = docs[0]?.data ?? [];
-
-    return {
-        data,
-        pagination: getPagingData(total, page, pageSize)
-    };
+            },
+            { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'createdBy',
+                    foreignField: '_id',
+                    as: 'creator'
+                }
+            },
+            { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } }
+        ],
+        project: { 'creator.password': 0 }
+    });
 };
 
 export const findAppointmentById = async (id) => {

@@ -1,9 +1,7 @@
 import Joi from 'joi';
 import { paginationFields } from '../pagination.js';
+import { APPOINTMENT_STATUS } from '../../constants/index.js';
 
-/**
- * @description Validation schema for Appointment creation.
- */
 const createAppointmentSchema = Joi.object({
     memberId: Joi.string()
         .hex()
@@ -40,20 +38,11 @@ const createAppointmentSchema = Joi.object({
     observations: Joi.string()
         .trim()
         .optional(),
-    googleEventId: Joi.string()
-        .optional(),
     status: Joi.string()
-        .valid('Programada', 'Completada', 'Cancelada', 'No asistió')
-        .default('Programada'),
-    createdBy: Joi.string()
-        .hex()
-        .length(24)
-        .required()
+        .valid(...APPOINTMENT_STATUS)
+        .default('Programada')
 });
 
-/**
- * @description Validation schema for Appointment updates.
- */
 const updateAppointmentSchema = Joi.object({
     memberId: Joi.string()
         .hex()
@@ -76,17 +65,15 @@ const updateAppointmentSchema = Joi.object({
     observations: Joi.string()
         .trim()
         .optional(),
-    googleEventId: Joi.string()
-        .optional(),
     status: Joi.string()
-        .valid('Programada', 'Completada', 'Cancelada', 'No asistió')
+        .valid(...APPOINTMENT_STATUS)
         .optional()
 }).min(1);
 
 const queryAppointmentSchema = Joi.object({
     ...paginationFields,
     status: Joi.string()
-        .valid('Programada', 'Completada', 'Cancelada', 'No asistió')
+        .valid(...APPOINTMENT_STATUS)
         .optional(),
     memberId: Joi.string()
         .hex()

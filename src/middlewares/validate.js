@@ -1,15 +1,6 @@
 import Joi from 'joi';
+import { AppError } from '../utils/AppError.js';
 
-/**
- * @description Generic Joi validation middleware.
- * Validates req.body, req.params, or req.query and replaces
- * the target with sanitized values (applies defaults).
- *
- * Usage:
- *   router.get('/', validate(querySchema, 'query'), controller)
- *   router.post('/', validate(createSchema, 'body'), controller)
- *   router.put('/:id', validate(updateSchema, 'body'), controller)
- */
 export const validate = (schema, source = 'body') => (req, res, next) => {
     const { error, value } = schema.validate(req[source], {
         abortEarly: false,
@@ -17,9 +8,10 @@ export const validate = (schema, source = 'body') => (req, res, next) => {
     });
 
     if (error) {
-        return res.status(400).json({
-            errors: error.details.map(d => d.message)
-        });
+        const messages = error.details.map(d => d.message);
+        const err = new AppError(messages.join(', '), 400);
+        err.details = messages;
+        return next(err);
     }
 
     req[source] = value;

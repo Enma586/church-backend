@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
+import { SACRAMENT_TYPE } from '../../constants/index.js';
 
-/**
- * @description Schema for recording the spiritual milestones of a member.
- * @requires memberId - Reference to the member who received the sacrament.
- */
 const sacramentSchema = new mongoose.Schema({
     memberId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -14,8 +11,7 @@ const sacramentSchema = new mongoose.Schema({
     type: {
         type: String,
         required: [true, 'El tipo de sacramento es requerido'],
-        enum: ['Ninguno','Bautismo', 'Primera Comunión', 'Confirmación'],
-        description: 'Tipo de hito espiritual'
+        enum: SACRAMENT_TYPE
     },
     date: {
         type: Date,
@@ -23,13 +19,11 @@ const sacramentSchema = new mongoose.Schema({
     },
     place: {
         type: String,
-        trim: true,
-        description: 'Opcional: Nombre de la iglesia o parroquia donde se realizó'
+        trim: true
     },
     celebrant: {
         type: String,
-        trim: true,
-        description: 'Nombre del sacerdote o diácono que presidió'
+        trim: true
     },
     godparents: [{
         name: { type: String, trim: true },
