@@ -18,7 +18,7 @@ const createMemberSchema = Joi.object({
             'any.required': 'La fecha de nacimiento es requerida'
         }),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino', 'Otro')
+        .valid('Masculino', 'Femenino')
         .required(),
     phone: Joi.string()
         .trim()
@@ -51,7 +51,7 @@ const createMemberSchema = Joi.object({
         )
         .optional(),
     status: Joi.string()
-        .valid('Activo', 'Inactivo', 'Fallecido')
+        .valid('Activo', 'Inactivo')
         .default('Activo')
 });
 
@@ -65,7 +65,7 @@ const updateMemberSchema = Joi.object({
     dateOfBirth: Joi.date()
         .optional(),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino', 'Otro')
+        .valid('Masculino', 'Femenino')
         .optional(),
     phone: Joi.string()
         .trim()
@@ -98,17 +98,17 @@ const updateMemberSchema = Joi.object({
         )
         .optional(),
     status: Joi.string()
-        .valid('Activo', 'Inactivo', 'Fallecido')
+        .valid('Activo', 'Inactivo')
         .optional()
 }).min(1);
 
 const queryMemberSchema = Joi.object({
     ...paginationFields,
     status: Joi.string()
-        .valid('Activo', 'Inactivo', 'Fallecido')
+        .valid('Activo', 'Inactivo')
         .optional(),
     gender: Joi.string()
-        .valid('Masculino', 'Femenino', 'Otro')
+        .valid('Masculino', 'Femenino')
         .optional(),
     departmentId: Joi.string()
         .hex()
