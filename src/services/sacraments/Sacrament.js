@@ -1,8 +1,14 @@
 import { Sacrament } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
+import { getIO } from '../../config/socket.js';
 
 export const createSacrament = async (data) => {
-    return await Sacrament.create(data);
+    const sacrament = await Sacrament.create(data);
+
+    const io = getIO();
+    io.emit('sacrament:created', sacrament);
+
+    return sacrament;
 };
 
 export const findAllSacraments = async (query) => {
@@ -41,9 +47,19 @@ export const findSacramentById = async (id) => {
 };
 
 export const updateSacrament = async (id, data) => {
-    return await Sacrament.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const updated = await Sacrament.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
+    const io = getIO();
+    io.emit('sacrament:updated', updated);
+
+    return updated;
 };
 
 export const removeSacrament = async (id) => {
-    return await Sacrament.findByIdAndDelete(id);
+    const deleted = await Sacrament.findByIdAndDelete(id);
+
+    const io = getIO();
+    io.emit('sacrament:deleted', { id });
+
+    return deleted;
 };

@@ -1,8 +1,14 @@
 import { Member } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
+import { getIO } from '../../config/socket.js';
 
 export const createMember = async (data) => {
-    return await Member.create(data);
+    const member = await Member.create(data);
+
+    const io = getIO();
+    io.emit('member:created', member);
+
+    return member;
 };
 
 export const findAllMembers = async (query) => {
@@ -49,9 +55,19 @@ export const findMemberById = async (id) => {
 };
 
 export const updateMember = async (id, data) => {
-    return await Member.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const updated = await Member.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
+    const io = getIO();
+    io.emit('member:updated', updated);
+
+    return updated;
 };
 
 export const removeMember = async (id) => {
-    return await Member.findByIdAndDelete(id);
+    const deleted = await Member.findByIdAndDelete(id);
+
+    const io = getIO();
+    io.emit('member:deleted', { id });
+
+    return deleted;
 };

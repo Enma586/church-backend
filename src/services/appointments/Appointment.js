@@ -1,5 +1,6 @@
 import { Appointment } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
+import { getIO } from '../../config/socket.js';
 import {
     createCalendarEvent,
     updateCalendarEvent,
@@ -31,7 +32,12 @@ export const createAppointment = async (data) => {
         }
     }
 
-    return await Appointment.create({ ...data, googleEventId, syncStatus });
+    const appointment = await Appointment.create({ ...data, googleEventId, syncStatus });
+
+    const io = getIO();
+    io.emit('appointment:created', appointment);
+
+    return appointment;
 };
 
 export const findAllAppointments = async (query) => {
@@ -108,7 +114,12 @@ export const updateAppointment = async (id, data) => {
         }
     }
 
-    return await Appointment.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const updated = await Appointment.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
+    const io = getIO();
+    io.emit('appointment:updated', updated);
+
+    return updated;
 };
 
 export const removeAppointment = async (id) => {
@@ -126,5 +137,10 @@ export const removeAppointment = async (id) => {
         }
     }
 
-    return await Appointment.findByIdAndDelete(id);
+    const deleted = await Appointment.findByIdAndDelete(id);
+
+    const io = getIO();
+    io.emit('appointment:deleted', { id });
+
+    return deleted;
 };

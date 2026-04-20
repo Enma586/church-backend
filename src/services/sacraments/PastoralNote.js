@@ -1,8 +1,14 @@
 import { PastoralNote } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
+import { getIO } from '../../config/socket.js';
 
 export const createPastoralNote = async (data) => {
-    return await PastoralNote.create(data);
+    const note = await PastoralNote.create(data);
+
+    const io = getIO();
+    io.emit('pastoral-note:created', note);
+
+    return note;
 };
 
 export const findAllPastoralNotes = async (query) => {
@@ -48,9 +54,19 @@ export const findPastoralNoteById = async (id) => {
 };
 
 export const updatePastoralNote = async (id, data) => {
-    return await PastoralNote.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const updated = await PastoralNote.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
+    const io = getIO();
+    io.emit('pastoral-note:updated', updated);
+
+    return updated;
 };
 
 export const removePastoralNote = async (id) => {
-    return await PastoralNote.findByIdAndDelete(id);
+    const deleted = await PastoralNote.findByIdAndDelete(id);
+
+    const io = getIO();
+    io.emit('pastoral-note:deleted', { id });
+
+    return deleted;
 };
