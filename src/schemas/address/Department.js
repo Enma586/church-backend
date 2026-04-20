@@ -1,37 +1,29 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 
-/**
- * @description Validation schema for Department creation.
- */
-const createDepartmentSchema = Joi.object({
-    name: Joi.string()
+const createDepartmentSchema = z.object({
+    name: z.string()
         .trim()
-        .required()
-        .messages({
-            'string.empty': 'El nombre del departamento es requerido',
-            'any.required': 'El nombre del departamento es requerido'
-        }),
-    isoCode: Joi.string()
+        .min(1, 'El nombre del departamento es requerido'),
+    isoCode: z.string()
         .trim()
         .optional()
 });
 
-/**
- * @description Validation schema for Department updates.
- */
-const updateDepartmentSchema = Joi.object({
-    name: Joi.string()
+const updateDepartmentSchema = z.object({
+    name: z.string()
         .trim()
         .optional(),
-    isoCode: Joi.string()
+    isoCode: z.string()
         .trim()
         .optional()
-}).min(1);
+}).refine(data => Object.keys(data).length > 0, {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+});
 
-const queryDepartmentSchema = Joi.object({
+const queryDepartmentSchema = z.object({
     ...paginationFields,
-    search: Joi.string()
+    search: z.string()
         .trim()
         .optional()
 });

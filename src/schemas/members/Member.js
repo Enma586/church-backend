@@ -1,117 +1,86 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 import { GENDER, MEMBER_STATUS, FAMILY_RELATIONSHIP } from '../../constants/index.js';
 
-const createMemberSchema = Joi.object({
-    fullName: Joi.string()
+const familyMemberSchema = z.object({
+    name: z.string().trim().min(1),
+    relationship: z.enum(FAMILY_RELATIONSHIP),
+    isMember: z.boolean().default(false),
+    contactNumber: z.string().trim().optional()
+});
+
+const createMemberSchema = z.object({
+    fullName: z.string()
         .trim()
-        .required()
-        .messages({
-            'string.empty': 'El nombre completo es requerido',
-            'any.required': 'El nombre completo es requerido'
-        }),
-    dateOfBirth: Joi.date()
-        .required()
-        .messages({
-            'any.required': 'La fecha de nacimiento es requerida'
-        }),
-    gender: Joi.string()
-        .valid(...GENDER)
-        .required(),
-    phone: Joi.string()
+        .min(1, 'El nombre completo es requerido'),
+    dateOfBirth: z.coerce.date(),
+    gender: z.enum(GENDER),
+    phone: z.string()
         .trim()
         .optional(),
-    email: Joi.string()
+    email: z.string()
         .trim()
         .email()
-        .lowercase()
-        .optional(),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
-        .required(),
-    municipalityId: Joi.string()
-        .hex()
-        .length(24)
-        .required(),
-    addressDetails: Joi.string()
+        .toLowerCase()
+        .optional()
+        .or(z.literal('')),
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/),
+    municipalityId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/),
+    addressDetails: z.string()
         .trim()
         .optional(),
-    family: Joi.array()
-        .items(
-            Joi.object({
-                name: Joi.string().trim().required(),
-                relationship: Joi.string()
-                    .valid(...FAMILY_RELATIONSHIP)
-                    .required(),
-                isMember: Joi.boolean().default(false),
-                contactNumber: Joi.string().trim()
-            })
-        )
+    family: z.array(familyMemberSchema)
         .optional(),
-    status: Joi.string()
-        .valid(...MEMBER_STATUS)
+    status: z.enum(MEMBER_STATUS)
         .default('Activo')
 });
 
-const updateMemberSchema = Joi.object({
-    fullName: Joi.string()
+const updateMemberSchema = z.object({
+    fullName: z.string()
         .trim()
         .optional(),
-    dateOfBirth: Joi.date()
+    dateOfBirth: z.coerce.date()
         .optional(),
-    gender: Joi.string()
-        .valid(...GENDER)
+    gender: z.enum(GENDER)
         .optional(),
-    phone: Joi.string()
+    phone: z.string()
         .trim()
         .optional(),
-    email: Joi.string()
+    email: z.string()
         .trim()
         .email()
-        .lowercase()
+        .toLowerCase()
+        .optional()
+        .or(z.literal('')),
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
+    municipalityId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    municipalityId: Joi.string()
-        .hex()
-        .length(24)
-        .optional(),
-    addressDetails: Joi.string()
+    addressDetails: z.string()
         .trim()
         .optional(),
-    family: Joi.array()
-        .items(
-            Joi.object({
-                name: Joi.string().trim().required(),
-                relationship: Joi.string()
-                    .valid(...FAMILY_RELATIONSHIP)
-                    .required(),
-                isMember: Joi.boolean().default(false),
-                contactNumber: Joi.string().trim()
-            })
-        )
+    family: z.array(familyMemberSchema)
         .optional(),
-    status: Joi.string()
-        .valid(...MEMBER_STATUS)
+    status: z.enum(MEMBER_STATUS)
         .optional()
-}).min(1);
+}).refine(data => Object.keys(data).length > 0, {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+});
 
-const queryMemberSchema = Joi.object({
+const queryMemberSchema = z.object({
     ...paginationFields,
-    status: Joi.string()
-        .valid(...MEMBER_STATUS)
+    status: z.enum(MEMBER_STATUS)
         .optional(),
-    gender: Joi.string()
-        .valid(...GENDER)
+    gender: z.enum(GENDER)
         .optional(),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    search: Joi.string()
+    search: z.string()
         .trim()
         .optional()
 });

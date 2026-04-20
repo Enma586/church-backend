@@ -1,26 +1,24 @@
-import Joi from 'joi';
+import { z } from 'zod';
 
-/**
- * @description Validation schema for Configuration creation/update.
- */
-const configurationSchema = Joi.object({
-    googleCalendarId: Joi.string()
+const configurationSchema = z.object({
+    googleCalendarId: z.string()
         .trim()
         .default('primary'),
-    googleServiceAccountEmail: Joi.string()
+    googleServiceAccountEmail: z.string()
         .trim()
         .email()
-        .optional(),
-    enableLocalNotifications: Joi.boolean()
+        .optional()
+        .or(z.literal('')),
+    enableLocalNotifications: z.boolean()
         .default(true),
-    notificationRefreshInterval: Joi.number()
-        .integer()
+    notificationRefreshInterval: z.number()
+        .int()
         .min(1)
         .default(60),
-    churchName: Joi.string()
+    churchName: z.string()
         .trim()
         .default('Parroquia Local'),
-    lastBackupDate: Joi.date()
+    lastBackupDate: z.coerce.date()
         .optional()
 });
 

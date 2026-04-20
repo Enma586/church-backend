@@ -1,96 +1,88 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 import { APPOINTMENT_STATUS } from '../../constants/index.js';
 
-const createAppointmentSchema = Joi.object({
-    memberId: Joi.string()
-        .hex()
-        .length(24)
-        .required()
-        .messages({
-            'any.required': 'Una cita debe estar vinculada a un miembro'
-        }),
-    title: Joi.string()
+const createAppointmentSchema = z.object({
+    memberId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/, 'Una cita debe estar vinculada a un miembro'),
+    title: z.string()
         .trim()
-        .required()
-        .messages({
-            'string.empty': 'El título de la cita es requerido',
-            'any.required': 'El título de la cita es requerido'
-        }),
-    description: Joi.string()
+        .min(1, 'El título de la cita es requerido'),
+    description: z.string()
         .trim()
         .optional(),
-    startDateTime: Joi.date()
-        .required()
-        .messages({
-            'any.required': 'La fecha y hora de inicio son requeridas'
-        }),
-    endDateTime: Joi.date()
-        .greater(Joi.ref('startDateTime'))
-        .required()
-        .messages({
-            'any.required': 'La fecha y hora de fin son requeridas',
-            'date.greater': 'La fecha de fin debe ser posterior a la fecha de inicio'
-        }),
-    suggestions: Joi.string()
+    startDateTime: z.coerce.date(),
+    endDateTime: z.coerce.date(),
+    suggestions: z.string()
         .trim()
         .optional(),
-    observations: Joi.string()
+    observations: z.string()
         .trim()
         .optional(),
-    status: Joi.string()
-        .valid(...APPOINTMENT_STATUS)
+    status: z.enum(APPOINTMENT_STATUS)
         .default('Programada')
-});
+}).refine(
+    data => data.endDateTime > data.startDateTime,
+    { message: 'La fecha de fin debe ser posterior a la fecha de inicio', path: ['endDateTime'] }
+);
 
-const updateAppointmentSchema = Joi.object({
-    memberId: Joi.string()
-        .hex()
-        .length(24)
+const updateAppointmentSchema = z.object({
+    memberId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    title: Joi.string()
+    title: z.string()
         .trim()
         .optional(),
-    description: Joi.string()
+    description: z.string()
         .trim()
         .optional(),
-    startDateTime: Joi.date()
+    startDateTime: z.coerce.date()
         .optional(),
-    endDateTime: Joi.date()
-        .greater(Joi.ref('startDateTime'))
+    endDateTime: z.coerce.date()
         .optional(),
-    suggestions: Joi.string()
+    suggestions: z.string()
         .trim()
         .optional(),
-    observations: Joi.string()
+    observations: z.string()
         .trim()
         .optional(),
-    status: Joi.string()
-        .valid(...APPOINTMENT_STATUS)
+    status: z.enum(APPOINTMENT_STATUS)
         .optional()
-}).min(1);
+}).refine(data => Object.keys(data).length > 0, {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+}).refine(
+    data => {
+        if (data.startDateTime && data.endDateTime) {
+            return data.endDateTime > data.startDateTime;
+        }
+        return true;
+    },
+    { message: 'La fecha de fin debe ser posterior a la fecha de inicio', path: ['endDateTime'] }
+);
 
-const queryAppointmentSchema = Joi.object({
+const queryAppointmentSchema = z.object({
     ...paginationFields,
-    status: Joi.string()
-        .valid(...APPOINTMENT_STATUS)
+    status: z.enum(APPOINTMENT_STATUS)
         .optional(),
-    memberId: Joi.string()
-        .hex()
-        .length(24)
+    memberId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    search: Joi.string()
+    search: z.string()
         .trim()
         .optional(),
-    dateFrom: Joi.date()
+    dateFrom: z.coerce.date()
         .optional(),
-    dateTo: Joi.date()
-        .greater(Joi.ref('dateFrom'))
+    dateTo: z.coerce.date()
         .optional()
-        .messages({
-            'date.greater': 'La fecha final debe ser posterior a la fecha inicial'
-        })
-});
+}).refine(
+    data => {
+        if (data.dateFrom && data.dateTo) {
+            return data.dateTo > data.dateFrom;
+        }
+        return true;
+    },
+    { message: 'La fecha final debe ser posterior a la fecha inicial', path: ['dateTo'] }
+);
 
 export {
     createAppointmentSchema,

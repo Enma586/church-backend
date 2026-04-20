@@ -1,22 +1,8 @@
-import Joi from 'joi';
+import { z } from 'zod';
 
-/**
- * @description Reusable Joi pagination fields.
- * Compose into any query schema with spread: ...paginationFields.
- */
-export const paginationFields = {
-    page: Joi.number()
-        .integer()
-        .min(1)
-        .default(1),
-    limit: Joi.number()
-        .integer()
-        .min(1)
-        .max(100)
-        .default(10)
-};
+const page = z.coerce.number().int().min(1).default(1);
+const limit = z.coerce.number().int().min(1).max(100).default(10);
 
-/**
- * @description Standalone pagination schema for generic list endpoints.
- */
-export const paginationSchema = Joi.object(paginationFields);
+export const paginationFields = { page, limit };
+
+export const paginationSchema = z.object(paginationFields);

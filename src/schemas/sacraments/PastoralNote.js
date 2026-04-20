@@ -1,40 +1,32 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 
-const createPastoralNoteSchema = Joi.object({
-    memberId: Joi.string()
-        .hex()
-        .length(24)
-        .required()
-        .messages({
-            'any.required': 'La nota debe estar vinculada a un miembro'
-        }),
-    content: Joi.string()
+const createPastoralNoteSchema = z.object({
+    memberId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/, 'La nota debe estar vinculada a un miembro'),
+    content: z.string()
         .trim()
-        .required()
-        .messages({
-            'string.empty': 'El contenido de la nota no puede estar vacío',
-            'any.required': 'El contenido de la nota no puede estar vacío'
-        }),
-    isSensitive: Joi.boolean()
+        .min(1, 'El contenido de la nota no puede estar vacío'),
+    isSensitive: z.boolean()
         .default(false)
 });
 
-const updatePastoralNoteSchema = Joi.object({
-    content: Joi.string()
+const updatePastoralNoteSchema = z.object({
+    content: z.string()
         .trim()
         .optional(),
-    isSensitive: Joi.boolean()
+    isSensitive: z.boolean()
         .optional()
-}).min(1);
+}).refine(data => Object.keys(data).length > 0, {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+});
 
-const queryPastoralNoteSchema = Joi.object({
+const queryPastoralNoteSchema = z.object({
     ...paginationFields,
-    memberId: Joi.string()
-        .hex()
-        .length(24)
+    memberId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    isSensitive: Joi.boolean()
+    isSensitive: z.coerce.boolean()
         .optional()
 });
 

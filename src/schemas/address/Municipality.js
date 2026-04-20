@@ -1,53 +1,38 @@
-import Joi from 'joi';
+import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 
-/**
- * @description Validation schema for Municipality creation.
- */
-const createMunicipalitySchema = Joi.object({
-    name: Joi.string()
+const createMunicipalitySchema = z.object({
+    name: z.string()
         .trim()
-        .required()
-        .messages({
-            'string.empty': 'El nombre del municipio es requerido',
-            'any.required': 'El nombre del municipio es requerido'
-        }),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
-        .required()
-        .messages({
-            'any.required': 'El municipio debe pertenecer a un departamento'
-        }),
-    code: Joi.string()
+        .min(1, 'El nombre del municipio es requerido'),
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/, 'El municipio debe pertenecer a un departamento'),
+    code: z.string()
         .trim()
         .optional()
 });
 
-/**
- * @description Validation schema for Municipality updates.
- */
-const updateMunicipalitySchema = Joi.object({
-    name: Joi.string()
+const updateMunicipalitySchema = z.object({
+    name: z.string()
         .trim()
         .optional(),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    code: Joi.string()
+    code: z.string()
         .trim()
         .optional()
-}).min(1);
+}).refine(data => Object.keys(data).length > 0, {
+    message: 'Debe proporcionar al menos un campo para actualizar'
+});
 
-const queryMunicipalitySchema = Joi.object({
+const queryMunicipalitySchema = z.object({
     ...paginationFields,
-    search: Joi.string()
+    search: z.string()
         .trim()
         .optional(),
-    departmentId: Joi.string()
-        .hex()
-        .length(24)
+    departmentId: z.string()
+        .regex(/^[0-9a-fA-F]{24}$/)
         .optional()
 });
 
