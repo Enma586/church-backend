@@ -9,7 +9,7 @@ export const FAMILY_RELATIONSHIP = Object.freeze([
 export const USER_ROLE = Object.freeze(['Coordinador', 'Subcoordinador'])
 
 export const APPOINTMENT_STATUS = Object.freeze([
-    'Programada', 'Completada', 'Cancelada', 'No asistió'
+    'Programada', 'Completada', 'Cancelada'
 ])
 
 export const SACRAMENT_TYPE = Object.freeze([
