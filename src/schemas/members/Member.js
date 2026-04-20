@@ -45,7 +45,7 @@ const createMemberSchema = Joi.object({
                     .valid(...FAMILY_RELATIONSHIP)
                     .required(),
                 isMember: Joi.boolean().default(false),
-                contactNumber: Joi.string().trim().required()
+                contactNumber: Joi.string().trim()
             })
         )
         .optional(),
@@ -90,7 +90,7 @@ const updateMemberSchema = Joi.object({
                     .valid(...FAMILY_RELATIONSHIP)
                     .required(),
                 isMember: Joi.boolean().default(false),
-                contactNumber: Joi.string().trim().required()
+                contactNumber: Joi.string().trim()
             })
         )
         .optional(),

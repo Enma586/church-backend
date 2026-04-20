@@ -6,7 +6,7 @@ export const FAMILY_RELATIONSHIP = Object.freeze([
     'Padre', 'Madre', 'Cónyuge', 'Hijo/a', 'Hermano/a', 'Tutor', 'Otro'
 ])
 
-export const USER_ROLE = Object.freeze(['Administrador', 'Empleado'])
+export const USER_ROLE = Object.freeze(['Coordinador', 'Subcoordinador'])
 
 export const APPOINTMENT_STATUS = Object.freeze([
     'Programada', 'Completada', 'Cancelada', 'No asistió'

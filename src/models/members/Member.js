@@ -47,7 +47,7 @@ const memberSchema = new mongoose.Schema({
             required: true,
             enum: FAMILY_RELATIONSHIP
         },
-        contactNumber: { type: int, trim: true },
+        contactNumber: { type: String, trim: true },
         isMember: { type: Boolean, default: false }
     }],
     status: {
