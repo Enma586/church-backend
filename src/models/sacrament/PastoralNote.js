@@ -15,7 +15,7 @@ const pastoralNoteSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: [true, 'Se requiere un autor (Usuario) para responsabilidad'],
-        description: 'El Administrador o Sacerdote que escribió la nota'
+        description: 'El Coordinador o Sacerdote que escribió la nota'
     },
     content: {
         type: String,

@@ -12,8 +12,8 @@ const router = Router();
 
 router.get('/', auth, validate(queryPastoralNoteSchema, 'query'), PastoralNoteController.findAll);
 router.get('/:id', auth, validate(paramsIdSchema, 'params'), PastoralNoteController.findById);
-router.post('/', auth, roleGuard('Administrador', 'Empleado'), validate(createPastoralNoteSchema, 'body'), PastoralNoteController.create);
-router.put('/:id', auth, roleGuard('Administrador', 'Empleado'), validate(paramsIdSchema, 'params'), validate(updatePastoralNoteSchema, 'body'), PastoralNoteController.update);
-router.delete('/:id', auth, roleGuard('Administrador'), validate(paramsIdSchema, 'params'), PastoralNoteController.remove);
+router.post('/', auth, roleGuard('Coordinador', 'Empleado'), validate(createPastoralNoteSchema, 'body'), PastoralNoteController.create);
+router.put('/:id', auth, roleGuard('Coordinador', 'Empleado'), validate(paramsIdSchema, 'params'), validate(updatePastoralNoteSchema, 'body'), PastoralNoteController.update);
+router.delete('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), PastoralNoteController.remove);
 
 export default router;

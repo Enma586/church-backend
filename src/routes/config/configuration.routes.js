@@ -31,6 +31,6 @@ router.get('/', auth, ConfigurationController.get);
  * @desc    Update system configuration (upserts if none exists)
  * @access  Administrator
  */
-router.put('/', auth, roleGuard('Administrador'), validate(configurationSchema, 'body'), ConfigurationController.update);
+router.put('/', auth, roleGuard('Coordinador'), validate(configurationSchema, 'body'), ConfigurationController.update);
 
 export default router;

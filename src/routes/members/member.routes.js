@@ -13,8 +13,8 @@ const router = Router();
 
 router.get('/', auth, validate(queryMemberSchema, 'query'), MemberController.findAll);
 router.get('/:id', auth, validate(paramsIdSchema, 'params'), MemberController.findById);
-router.post('/', auth, roleGuard('Administrador'), validate(createMemberSchema, 'body'), MemberController.create);
-router.put('/:id', auth, roleGuard('Administrador'), validate(paramsIdSchema, 'params'), validate(updateMemberSchema, 'body'), MemberController.update);
-router.delete('/:id', auth, roleGuard('Administrador'), validate(paramsIdSchema, 'params'), MemberController.remove);
+router.post('/', auth, roleGuard('Coordinador'), validate(createMemberSchema, 'body'), MemberController.create);
+router.put('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), validate(updateMemberSchema, 'body'), MemberController.update);
+router.delete('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), MemberController.remove);
 
 export default router;
