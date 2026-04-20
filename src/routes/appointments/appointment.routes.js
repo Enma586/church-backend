@@ -12,8 +12,8 @@ const router = Router();
 
 router.get('/', auth, validate(queryAppointmentSchema, 'query'), AppointmentController.findAll);
 router.get('/:id', auth, validate(paramsIdSchema, 'params'), AppointmentController.findById);
-router.post('/', auth, roleGuard('Coordinador', 'Empleado'), validate(createAppointmentSchema, 'body'), AppointmentController.create);
-router.put('/:id', auth, roleGuard('Coordinador', 'Empleado'), validate(paramsIdSchema, 'params'), validate(updateAppointmentSchema, 'body'), AppointmentController.update);
+router.post('/', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(createAppointmentSchema, 'body'), AppointmentController.create);
+router.put('/:id', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(paramsIdSchema, 'params'), validate(updateAppointmentSchema, 'body'), AppointmentController.update);
 router.delete('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), AppointmentController.remove);
 
 export default router;

@@ -28,7 +28,7 @@ const createUserSchema = Joi.object({
         }),
     role: Joi.string()
         .valid(...USER_ROLE)
-        .default('Empleado'),
+        .default('Subcoordinador'),
     isActive: Joi.boolean()
         .default(true)
 });
