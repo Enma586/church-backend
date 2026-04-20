@@ -125,7 +125,7 @@ const withRetry = async (fn, context = 'Google Calendar') => {
 
 const getTimezone = () => env.TZ;
 
-export const createCalendarEvent = async ({ title, description, startDateTime, endDateTime }) => {
+export const createCalendarEvent = async ({ title, description, startDateTime, endDateTime, attendeeEmail }) => {
     const { start, end } = validateDates(startDateTime, endDateTime);
 
     const calendar = await getCalendarService();
@@ -137,7 +137,18 @@ export const createCalendarEvent = async ({ title, description, startDateTime, e
         description: sanitizeString(description, 5000),
         start: { dateTime: start.toISOString(), timeZone: tz },
         end:   { dateTime: end.toISOString(),   timeZone: tz },
+        reminders: {
+            useDefault: false,
+            overrides: [
+                { method: 'email', minutes: 60 },
+                { method: 'popup', minutes: 30 },
+            ]
+        }
     };
+
+    if (attendeeEmail) {
+        event.attendees = [{ email: attendeeEmail }];
+    }
 
     const response = await withRetry(
         () => calendar.events.insert({ calendarId, requestBody: event, timeout: API_TIMEOUT_MS }),

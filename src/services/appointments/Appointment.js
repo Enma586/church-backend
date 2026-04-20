@@ -1,4 +1,4 @@
-import { Appointment } from '../../models/index.js';
+import { Appointment, Member } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
 import {
@@ -14,11 +14,14 @@ export const createAppointment = async (data) => {
     let syncStatus = 'synced';
 
     try {
+        const member = await Member.findById(data.memberId).select('email').lean();
+
         googleEventId = await createCalendarEvent({
             title: data.title,
             description: data.description,
             startDateTime: data.startDateTime,
             endDateTime: data.endDateTime,
+            attendeeEmail: member?.email || undefined,
         });
     } catch (error) {
         const errorType = error._googleErrorType || classifyGoogleError(error);
