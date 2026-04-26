@@ -1,7 +1,7 @@
 /**
  * @file tests/unit/utils/pagination.test.js
  * @description Unit tests for the pagination utility functions.
- * Verifies that offset/limit calculations and metadata generation are mathematically correct.
+ * Verifies that skip/limit calculations and metadata generation are mathematically correct.
  */
 
 import { getPagination, getPagingData } from '../../../src/utils/pagination.js';
@@ -9,23 +9,24 @@ import { getPagination, getPagingData } from '../../../src/utils/pagination.js';
 describe('Pagination Utilities', () => {
   
   describe('getPagination()', () => {
-    it('should return default limit (10) and offset (0) if no arguments are provided', () => {
+    it('should return default limit (10) and skip (0) if no arguments are provided', () => {
       const result = getPagination(undefined, undefined);
-      expect(result).toEqual({ limit: 10, offset: 0 });
+      // Actualizado: Esperamos 'skip', no 'offset'
+      expect(result).toEqual({ limit: 10, skip: 0 });
     });
 
-    it('should correctly calculate offset based on page number', () => {
+    it('should correctly calculate skip based on page number', () => {
       // Example: Page 3 with a limit of 15 items per page -> skip the first 30 items
       const result = getPagination(3, 15);
-      expect(result).toEqual({ limit: 15, offset: 30 });
+      // Actualizado: Esperamos 'skip', no 'offset'
+      expect(result).toEqual({ limit: 15, skip: 30 });
     });
   });
 
   describe('getPagingData()', () => {
     it('should correctly build the pagination metadata object', () => {
-      // Simulated data: total 55 items, current page 2, limit 10
-      const dummyData = [{ id: 1 }, { id: 2 }];
-      const result = getPagingData(dummyData, 2, 10, 55);
+      // Actualizado: Pasamos (total, page, limit) exactamente como lo pide tu función
+      const result = getPagingData(55, 2, 10);
 
       expect(result).toEqual({
         total: 55,
@@ -38,16 +39,16 @@ describe('Pagination Utilities', () => {
     });
 
     it('should handle the first page correctly (no previous page)', () => {
-      const dummyData = [];
-      const result = getPagingData(dummyData, 1, 10, 55);
+      // Total 55, página 1, límite 10
+      const result = getPagingData(55, 1, 10);
 
       expect(result.hasPrevPage).toBe(false);
       expect(result.hasNextPage).toBe(true);
     });
 
     it('should handle the last page correctly (no next page)', () => {
-      const dummyData = [];
-      const result = getPagingData(dummyData, 6, 10, 55);
+      // Total 55, página 6, límite 10
+      const result = getPagingData(55, 6, 10);
 
       expect(result.hasNextPage).toBe(false);
       expect(result.hasPrevPage).toBe(true);
