@@ -21,6 +21,7 @@ const loginLimiter = rateLimit({
 router.post('/login', loginLimiter, validate(loginUserSchema, 'body'), UserController.login);
 router.post('/logout', auth, UserController.logout);
 router.get('/me', auth, UserController.me);
+router.get('/verify', auth, UserController.verifyToken);
 router.get('/', auth, roleGuard('Coordinador'), validate(queryUserSchema, 'query'), UserController.findAll);
 router.post('/', auth, roleGuard('Coordinador'), validate(createUserSchema, 'body'), UserController.create);
 router.put('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), validate(updateUserSchema, 'body'), UserController.update);
