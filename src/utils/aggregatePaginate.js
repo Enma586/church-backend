@@ -21,8 +21,8 @@ export const aggregatePaginate = async (Model, { filter = {}, sort = {}, page = 
 
     const [result] = await Model.aggregate(pipeline)
 
-    const total = result.metadata[0]?.total ?? 0
-    const data = result.data ?? []
+    const total = result?.metadata[0]?.total ?? 0
+    const data = result?.data ?? []
 
     return {
         data,
