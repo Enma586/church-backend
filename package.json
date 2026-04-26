@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "vitest run",       
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
