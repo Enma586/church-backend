@@ -11,28 +11,19 @@ import Department from '../../src/models/address/Department.js';
 import User from '../../src/models/members/User.js';
 import { env } from '../../src/config/env.js';
 
-/**
- * @function generateAuthCookie
- * @description Creates a mock user in the DB and returns a signed JWT cookie string.
- * @param {string} role - El rol del usuario ('Coordinador' o 'Subcoordinador').
- * @returns {Promise<string>} La cookie formateada.
- */
 const generateAuthCookie = async (role = 'Coordinador') => {
   const userId = new mongoose.Types.ObjectId();
   
-  // 1. Guardamos un usuario falso en la DB en memoria para que el middleware lo encuentre
   const mockUser = new User({
     _id: userId,
     username: `testuser_${Date.now()}`,
-    password: 'hashed_password', // No importa porque no pasamos por el login
+    password: 'hashed_password',
     role: role,
     isActive: true
   });
   
-  // validateBeforeSave: false nos permite saltar reglas de Zod/Mongoose solo para este test
   await mockUser.save({ validateBeforeSave: false });
 
-  // 2. Firmamos el token con el mismo secret que usa tu app real
   const token = jwt.sign(
     { id: userId },
     env.JWT_SECRET || process.env.JWT_SECRET,
@@ -43,6 +34,11 @@ const generateAuthCookie = async (role = 'Coordinador') => {
 };
 
 describe('Integration: Address API (Departments)', () => {
+
+  // Forzamos el entorno de desarrollo para que errorHandler devuelva el stack trace
+  beforeAll(() => {
+    process.env.NODE_ENV = 'development';
+  });
 
   describe('GET /api/address/departments', () => {
     it('should return 401 Unauthorized if no cookie is provided', async () => {
@@ -57,6 +53,12 @@ describe('Integration: Address API (Departments)', () => {
         .get('/api/address/departments')
         .set('Cookie', [cookie]); 
       
+      // Bloque de depuración para capturar el error exacto
+      if (response.status === 500) {
+        console.error('DETALLE DEL ERROR 500:');
+        console.error(JSON.stringify(response.body, null, 2));
+      }
+      
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(Array.isArray(response.body.data)).toBe(true);
@@ -65,7 +67,6 @@ describe('Integration: Address API (Departments)', () => {
 
   describe('POST /api/address/departments', () => {
     it('should return 403 Forbidden if user is Subcoordinador (not Coordinador)', async () => {
-      // Creamos un Subcoordinador. El router exige Coordinador, así que debe rebotar con 403.
       const cookie = await generateAuthCookie('Subcoordinador'); 
       const response = await request(app)
         .post('/api/address/departments')
@@ -81,7 +82,7 @@ describe('Integration: Address API (Departments)', () => {
       const response = await request(app)
         .post('/api/address/departments')
         .set('Cookie', [cookie])
-        .send({}); // Objeto vacío, falta el "name" requerido por Zod
+        .send({});
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
@@ -96,12 +97,10 @@ describe('Integration: Address API (Departments)', () => {
         .set('Cookie', [cookie])
         .send(payload);
 
-      // Verificamos que la API responda bien
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.name).toBe('Santa Ana');
 
-      // Verificamos que realmente se haya insertado en MongoDB
       const dbRecord = await Department.findOne({ name: 'Santa Ana' });
       expect(dbRecord).not.toBeNull();
       expect(dbRecord.name).toBe('Santa Ana');
