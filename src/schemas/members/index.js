@@ -3,7 +3,7 @@
  * Centralizes personal identity and system access validation schemas.
  */
 import { createMemberSchema, updateMemberSchema, queryMemberSchema } from './Member.js';
-import { createUserSchema, updateUserSchema, loginUserSchema, queryUserSchema } from './User.js';
+import { createUserSchema, updateUserSchema, loginUserSchema, queryUserSchema, registerSchema } from './User.js';
 
 export {
     createMemberSchema,
@@ -12,5 +12,7 @@ export {
     createUserSchema,
     updateUserSchema,
     loginUserSchema,
-    queryUserSchema
+    queryUserSchema,
+    registerSchema
+
 };

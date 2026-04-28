@@ -90,3 +90,23 @@ export const update = async (req, res, next) => {
     next(err);
   }
 };
+
+export const register = async (req, res, next) => {
+  try {
+    const { user, member } = await registerUser(req.body);
+
+    res.status(201).json({
+      success: true,
+      message: 'Cuenta creada exitosamente. Un coordinador revisará tus datos.',
+      data: {
+        user,
+        member: {
+          _id: member._id,
+          fullName: member.fullName,
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

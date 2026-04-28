@@ -33,7 +33,8 @@ import {
     createUserSchema,
     updateUserSchema,
     loginUserSchema,
-    queryUserSchema
+    queryUserSchema,
+    registerSchema
 } from './members/index.js';
 
 // 5. Sacrament Domain (Spiritual Life)
@@ -85,5 +86,6 @@ export {
     updatePastoralNoteSchema,
     queryPastoralNoteSchema,
     paginationSchema,
-    paramsIdSchema
+    paramsIdSchema,
+    registerSchema
 };
