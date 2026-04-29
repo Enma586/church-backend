@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Municipality } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 
@@ -10,7 +11,10 @@ export const findAllMunicipalities = async (query) => {
 
     const filter = {};
     if (search) filter.name = { $regex: search, $options: 'i' };
-    if (departmentId) filter.departmentId = departmentId;
+    // Cast string to ObjectId — $match in aggregation does NOT auto-cast
+    if (departmentId && mongoose.Types.ObjectId.isValid(departmentId)) {
+        filter.departmentId = new mongoose.Types.ObjectId(departmentId);
+    }
 
     return await aggregatePaginate(Municipality, {
         filter,

@@ -1,13 +1,12 @@
+import mongoose from 'mongoose';
 import { Member } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
 
 export const createMember = async (data) => {
     const member = await Member.create(data);
-
     const io = getIO();
     io.emit('member:created', member);
-
     return member;
 };
 
@@ -17,7 +16,10 @@ export const findAllMembers = async (query) => {
     const filter = {};
     if (status) filter.status = status;
     if (gender) filter.gender = gender;
-    if (departmentId) filter.departmentId = departmentId;
+    // Cast string to ObjectId — $match in aggregation does NOT auto-cast
+    if (departmentId && mongoose.Types.ObjectId.isValid(departmentId)) {
+        filter.departmentId = new mongoose.Types.ObjectId(departmentId);
+    }
     if (search) filter.fullName = { $regex: search, $options: 'i' };
 
     return await aggregatePaginate(Member, {
@@ -56,18 +58,14 @@ export const findMemberById = async (id) => {
 
 export const updateMember = async (id, data) => {
     const updated = await Member.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-
     const io = getIO();
     io.emit('member:updated', updated);
-
     return updated;
 };
 
 export const removeMember = async (id) => {
     const deleted = await Member.findByIdAndDelete(id);
-
     const io = getIO();
     io.emit('member:deleted', { id });
-
     return deleted;
 };
