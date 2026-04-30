@@ -29,19 +29,19 @@ export const findAllPastoralNotes = async (query) => {
                     from: 'members',
                     localField: 'memberId',
                     foreignField: '_id',
-                    as: 'member'
+                    as: 'memberId'
                 }
             },
-            { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
                     from: 'users',
                     localField: 'authorId',
                     foreignField: '_id',
-                    as: 'author'
+                    as: 'authorId'
                 }
             },
-            { $unwind: { path: '$author', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$authorId', preserveNullAndEmptyArrays: true } }
         ],
         project: { 'author.password': 0 }
     });
