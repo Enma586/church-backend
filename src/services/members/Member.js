@@ -33,19 +33,19 @@ export const findAllMembers = async (query) => {
                     from: 'departments',
                     localField: 'departmentId',
                     foreignField: '_id',
-                    as: 'department'
+                    as: 'departmentId'
                 }
             },
-            { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$departmentId', preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
                     from: 'municipalities',
                     localField: 'municipalityId',
                     foreignField: '_id',
-                    as: 'municipality'
+                    as: 'municipalityId'
                 }
             },
-            { $unwind: { path: '$municipality', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$municipalityId', preserveNullAndEmptyArrays: true } }
         ]
     });
 };
