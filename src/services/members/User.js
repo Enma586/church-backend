@@ -34,7 +34,7 @@ export const findAllUsers = async (query) => {
                     from: 'members',
                     localField: 'memberId',
                     foreignField: '_id',
-                    as: 'member'
+                    as: 'memberId'
                 }
             },
             { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } }
