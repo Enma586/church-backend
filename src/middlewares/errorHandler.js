@@ -7,9 +7,17 @@ export const errorHandler = (err, req, res, next) => {
     }
 
     if (err.code === 11000) {
-        const field = Object.keys(err.keyValue).join(', ');
+        const field = Object.keys(err.keyValue)[0];
+        const fieldLabels = {
+            memberId: 'Miembro (ya tiene un usuario asignado)',
+            username: 'Nombre de usuario',
+            email: 'Correo electrónico',
+            name: 'Nombre',
+            fullName: 'Nombre completo',
+        };
+        const label = fieldLabels[field] || field;
         err.statusCode = 409;
-        err.message = `Valor duplicado para: ${field}`;
+        err.message = `Valor duplicado para: ${label}`;
     }
 
     if (err.name === 'ValidationError') {
@@ -21,7 +29,7 @@ export const errorHandler = (err, req, res, next) => {
 
     const response = {
         success: false,
-        message: err.message || 'Error interno del servidor'
+        message: err.message || 'Error interno del servidor',
     };
 
     if (err.details) {

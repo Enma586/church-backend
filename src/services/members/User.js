@@ -37,7 +37,7 @@ export const findAllUsers = async (query) => {
                     as: 'memberId'
                 }
             },
-            { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } }
         ],
         project: { password: 0 }
     });
