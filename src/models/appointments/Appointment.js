@@ -2,34 +2,45 @@ import mongoose from 'mongoose';
 import { APPOINTMENT_STATUS, SYNC_STATUS } from '../../constants/index.js';
 
 const appointmentSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ['cita_pastoral', 'evento_cronograma', 'bloqueo_agenda'],
+        default: 'cita_pastoral',
+        index: true
+    },
+    // Miembro para citas individuales (ahora opcional en DB)
     memberId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Member',
-        required: [true, 'Una cita debe estar vinculada a un miembro'],
         index: true
     },
+    // Arreglo de miembros involucrados para eventos del cronograma
+    participants: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Member'
+    }],
     title: {
         type: String,
-        required: [true, 'El título de la cita es requerido'],
+        required: [true, 'El título es requerido'],
         trim: true
     },
     description: {
         type: String,
         trim: true
     },
+    // Fecha para eventos de "Todo el día" (Cronograma)
+    allDayDate: {
+        type: Date
+    },
+    // Fechas para reuniones con hora específica (Citas)
     startDateTime: {
-        type: Date,
-        required: [true, 'La fecha y hora de inicio son requeridas']
+        type: Date
     },
     endDateTime: {
-        type: Date,
-        required: [true, 'La fecha y hora de fin son requeridas']
+        type: Date
     },
-    suggestions: {
-        type: String,
-        trim: true
-    },
-    observations: {
+    // Reemplazo de observaciones y sugerencias
+    extras: {
         type: String,
         trim: true
     },

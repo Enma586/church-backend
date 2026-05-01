@@ -14,14 +14,26 @@ export const createAppointment = async (data) => {
     let syncStatus = 'synced';
 
     try {
-        const member = await Member.findById(data.memberId).select('email').lean();
+        let attendeeEmail = undefined;
+        // Solo buscamos el correo si es una cita pastoral con un miembro específico
+        if (data.memberId) {
+            const member = await Member.findById(data.memberId).select('email').lean();
+            attendeeEmail = member?.email || undefined;
+        }
 
         googleEventId = await createCalendarEvent({
             title: data.title,
             description: data.description,
             startDateTime: data.startDateTime,
             endDateTime: data.endDateTime,
-            attendeeEmail: member?.email || undefined,
+            // Si hay un allDayDate, lo convertimos a formato YYYY-MM-DD para Google
+            allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
+            attendeeEmail,
+            // Le pedimos a Google que ponga un recordatorio 24 horas antes (1440 mins)
+            reminders: {
+                useDefault: false,
+                overrides: [{ method: 'popup', minutes: 1440 }]
+            }
         });
     } catch (error) {
         const errorType = error._googleErrorType || classifyGoogleError(error);
@@ -44,21 +56,30 @@ export const createAppointment = async (data) => {
 };
 
 export const findAllAppointments = async (query) => {
-    const { page, limit, status, memberId, search, dateFrom, dateTo } = query;
+    // 1. Agregamos "type" a la destructuración
+    const { page, limit, status, memberId, type, search, dateFrom, dateTo } = query;
 
     const filter = {};
     if (status) filter.status = status;
     if (memberId) filter.memberId = memberId;
+    if (type) filter.type = type; // 2. Aplicamos el filtro de tipo
     if (search) filter.title = { $regex: search, $options: 'i' };
+    
     if (dateFrom || dateTo) {
-        filter.startDateTime = {};
-        if (dateFrom) filter.startDateTime.$gte = new Date(dateFrom);
-        if (dateTo) filter.startDateTime.$lte = new Date(dateTo);
+        const dateQuery = {};
+        if (dateFrom) dateQuery.$gte = new Date(dateFrom);
+        if (dateTo) dateQuery.$lte = new Date(dateTo);
+        
+        // 3. El filtro busca si la fecha cae en startDateTime (Citas) O en allDayDate (Cronograma)
+        filter.$or = [
+            { startDateTime: dateQuery },
+            { allDayDate: dateQuery }
+        ];
     }
 
     return await aggregatePaginate(Appointment, {
         filter,
-        sort: { startDateTime: 1 },
+        sort: { startDateTime: 1, allDayDate: 1 }, // Ordenar por ambas fechas posibles
         page,
         limit,
         lookups: [
@@ -71,6 +92,15 @@ export const findAllAppointments = async (query) => {
                 }
             },
             { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } },
+            // NUEVO LOOKUP: Para el arreglo de participantes del cronograma
+            {
+                $lookup: {
+                    from: 'members',
+                    localField: 'participants',
+                    foreignField: '_id',
+                    as: 'participantsList' // Se llamará participantsList en el resultado
+                }
+            },
             {
                 $lookup: {
                     from: 'users',
@@ -88,6 +118,7 @@ export const findAllAppointments = async (query) => {
 export const findAppointmentById = async (id) => {
     return await Appointment.findById(id)
         .populate('memberId', 'fullName phone email')
+        .populate('participants', 'fullName phone email') // Poblamos los involucrados del cronograma
         .populate('createdBy', 'username role');
 };
 
@@ -101,6 +132,7 @@ export const updateAppointment = async (id, data) => {
                 description: data.description,
                 startDateTime: data.startDateTime,
                 endDateTime: data.endDateTime,
+                allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
             });
             data.syncStatus = 'synced';
         } catch (error) {
@@ -117,7 +149,8 @@ export const updateAppointment = async (id, data) => {
         }
     }
 
-    const updated = await Appointment.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    // Usamos returnDocument: 'after' para eliminar el warning de Mongoose
+    const updated = await Appointment.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true });
 
     const io = getIO();
     io.emit('appointment:updated', updated);
