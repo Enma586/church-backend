@@ -51,4 +51,14 @@ const updateAppointmentSchema = createAppointmentSchema.partial().refine(data =>
     return true;
 }, { message: 'La hora de fin debe ser posterior a la de inicio', path: ['endDateTime'] });
 
-export { createAppointmentSchema, updateAppointmentSchema };
+
+export const queryAppointmentSchema = z.object({
+    ...paginationFields,
+    status: z.enum(APPOINTMENT_STATUS).optional(),
+    memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+    type: z.enum(EVENT_TYPES).optional(),
+    search: z.string().trim().optional(),
+    dateFrom: z.coerce.date().optional(),
+    dateTo: z.coerce.date().optional(),
+});
+export { createAppointmentSchema, updateAppointmentSchema, queryAppointmentSchema };
