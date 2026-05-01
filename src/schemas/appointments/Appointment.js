@@ -13,7 +13,6 @@ const baseAppointmentFields = z.object({
     description: z.string().trim().optional(),
     allDayDate: z.coerce.date().optional(),
     startDateTime: z.coerce.date().optional(),
-    endDateTime: z.coerce.date().optional(),
     extras: z.string().trim().optional(),
     status: z.enum(APPOINTMENT_STATUS).default('Programada')
 });
@@ -22,7 +21,7 @@ const baseAppointmentFields = z.object({
 const createAppointmentSchema = baseAppointmentFields
     .refine(data => {
         if (data.type === 'cita_pastoral') {
-            return data.memberId && data.startDateTime && data.endDateTime;
+            return data.memberId && data.startDateTime;
         }
         if (data.type === 'evento_cronograma') {
             return !!data.allDayDate;
@@ -32,30 +31,14 @@ const createAppointmentSchema = baseAppointmentFields
         message: 'Faltan datos requeridos para el tipo de evento seleccionado', 
         path: ['type'] 
     })
-    .refine(data => {
-        if (data.startDateTime && data.endDateTime) {
-            return data.endDateTime > data.startDateTime;
-        }
-        return true;
-    }, { 
-        message: 'La hora de fin debe ser posterior a la de inicio', 
-        path: ['endDateTime'] 
-    });
+
 
 // 3. Esquema de ACTUALIZACIÓN (Usamos la base + .partial() y sus validaciones)
 const updateAppointmentSchema = baseAppointmentFields.partial()
     .refine(data => Object.keys(data).length > 0, {
         message: 'Debe proporcionar al menos un campo para actualizar'
     })
-    .refine(data => {
-        if (data.startDateTime && data.endDateTime) {
-            return data.endDateTime > data.startDateTime;
-        }
-        return true;
-    }, { 
-        message: 'La hora de fin debe ser posterior a la de inicio', 
-        path: ['endDateTime'] 
-    });
+
 
 // 4. Esquema de QUERY (Para las búsquedas y filtros)
 const queryAppointmentSchema = z.object({

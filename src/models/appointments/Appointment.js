@@ -36,9 +36,6 @@ const appointmentSchema = new mongoose.Schema({
     startDateTime: {
         type: Date
     },
-    endDateTime: {
-        type: Date
-    },
     // Reemplazo de observaciones y sugerencias
     extras: {
         type: String,

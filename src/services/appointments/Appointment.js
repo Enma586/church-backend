@@ -25,7 +25,6 @@ export const createAppointment = async (data) => {
             title: data.title,
             description: data.description,
             startDateTime: data.startDateTime,
-            endDateTime: data.endDateTime,
             // Si hay un allDayDate, lo convertimos a formato YYYY-MM-DD para Google
             allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
             attendeeEmail,
@@ -131,7 +130,6 @@ export const updateAppointment = async (id, data) => {
                 title: data.title,
                 description: data.description,
                 startDateTime: data.startDateTime,
-                endDateTime: data.endDateTime,
                 allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
             });
             data.syncStatus = 'synced';

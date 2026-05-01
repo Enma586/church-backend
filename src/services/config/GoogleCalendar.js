@@ -25,12 +25,7 @@ const classifyGoogleError = (error) => {
   if (code === 403) return GoogleErrorType.FORBIDDEN;
   if (code === 429) return GoogleErrorType.RATE_LIMIT;
   if (code === 400) return GoogleErrorType.INVALID_INPUT;
-  if (
-    code === "ECONNRESET" ||
-    code === "ETIMEDOUT" ||
-    code === "ENOTFOUND" ||
-    !code
-  )
+  if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND" || !code)
     return GoogleErrorType.TRANSIENT;
   return GoogleErrorType.UNKNOWN;
 };
@@ -47,37 +42,13 @@ const sanitizeString = (value, maxLength = 500) => {
   return cleaned.slice(0, maxLength);
 };
 
-const validateDates = (startDateTime, endDateTime) => {
-  const start = new Date(startDateTime);
-  const end = new Date(endDateTime);
-
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    throw new Error("Las fechas proporcionadas no son válidas");
-  }
-  if (end <= start) {
-    throw new Error("La fecha de fin debe ser posterior a la fecha de inicio");
-  }
-  return { start, end };
-};
-
 const getAuthClient = async () => {
   const config = await Configuration.findOne();
 
-  const clientEmail =
-    config?.googleServiceAccountEmail || env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n")?.replace(
-    /^"|"$/g,
-    "",
-  );
-  console.log("[GoogleCalendar] DEBUG:");
-  console.log("  clientEmail:", clientEmail);
-  console.log("  privateKey starts with:", privateKey?.slice(0, 50));
-  console.log("  privateKey length:", privateKey?.length);
-  console.log(
-    "  keyPattern (BEGIN/END):",
-    privateKey?.includes("BEGIN PRIVATE KEY") ? "BEGIN ✓" : "BEGIN ✗",
-    privateKey?.includes("END PRIVATE KEY") ? "END ✓" : "END ✗",
-  );
+  const clientEmail = config?.googleServiceAccountEmail || env.GOOGLE_CLIENT_EMAIL;
+  const privateKey = env.GOOGLE_PRIVATE_KEY
+    ?.replace(/\\n/g, "\n")
+    ?.replace(/^"|"$/g, "");
 
   if (!clientEmail || !privateKey) {
     throw new Error(
@@ -90,38 +61,13 @@ const getAuthClient = async () => {
   if (authClient && authClientFingerprint === fingerprint) {
     return authClient;
   }
-authClient = new google.auth.JWT({
+
+  authClient = new google.auth.JWT({
     email: clientEmail,
     key: privateKey,
-    scopes: ['https://www.googleapis.com/auth/calendar'],
-});
+    scopes: ["https://www.googleapis.com/auth/calendar"],
+  });
 
-  // ─── DEBUG: Forzar autorización y ver token ──────────────────
-  try {
-    const credentials = await authClient.authorize();
-    console.log("[GoogleCalendar] Token obtenido:", credentials ? "✓" : "✗");
-    if (credentials?.access_token) {
-      console.log(
-        "[GoogleCalendar]  access_token preview:",
-        credentials.access_token.slice(0, 20) + "...",
-      );
-    }
-  } catch (authError) {
-    console.error(
-      "[GoogleCalendar] FALLO al obtener token:",
-      authError.message,
-    );
-    console.error("[GoogleCalendar] Stack:", authError.stack?.slice(0, 300));
-    throw authError;
-  }
-  // ─────────────────────────────────────────────────────────────
-
-  authClientFingerprint = fingerprint;
-  return authClient;
-
-  authClient = new google.auth.JWT(clientEmail, null, privateKey, [
-    "https://www.googleapis.com/auth/calendar",
-  ]);
   authClientFingerprint = fingerprint;
   return authClient;
 };
@@ -135,6 +81,8 @@ const getCalendarService = async () => {
   const auth = await getAuthClient();
   return google.calendar({ version: "v3", auth });
 };
+
+const getTimezone = () => env.TZ;
 
 const withRetry = async (fn, context = "Google Calendar") => {
   let lastError;
@@ -166,14 +114,15 @@ const withRetry = async (fn, context = "Google Calendar") => {
   throw lastError;
 };
 
-const getTimezone = () => env.TZ;
-
-// 1. Modificamos la firma para aceptar allDayDate y reminders
+/**
+ * Creates a calendar event.
+ * - allDayDate: full-day event (date only)
+ * - startDateTime: timed event, defaults to 1h duration
+ */
 export const createCalendarEvent = async ({
   title,
   description,
   startDateTime,
-  endDateTime,
   allDayDate,
   attendeeEmail,
   reminders,
@@ -184,21 +133,19 @@ export const createCalendarEvent = async ({
 
   let start, end;
 
-  // 2. Lógica inteligente de fechas
   if (allDayDate) {
-    // La API de Google exige que el 'end' de un evento de todo el día sea el día siguiente
     const nextDay = new Date(allDayDate);
     nextDay.setDate(nextDay.getDate() + 1);
-    const endAllDayStr = nextDay.toISOString().split("T")[0];
-
     start = { date: allDayDate };
-    end = { date: endAllDayStr };
-  } else if (startDateTime && endDateTime) {
-    const dates = validateDates(startDateTime, endDateTime);
-    start = { dateTime: dates.start.toISOString(), timeZone: tz };
-    end = { dateTime: dates.end.toISOString(), timeZone: tz };
+    end = { date: nextDay.toISOString().split("T")[0] };
+  } else if (startDateTime) {
+    const startDate = new Date(startDateTime);
+    if (isNaN(startDate.getTime())) throw new Error("Fecha de inicio inválida");
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // +1h
+    start = { dateTime: startDate.toISOString(), timeZone: tz };
+    end = { dateTime: endDate.toISOString(), timeZone: tz };
   } else {
-    throw new Error("Se requiere allDayDate o startDateTime/endDateTime");
+    throw new Error("Se requiere allDayDate o startDateTime");
   }
 
   const event = {
@@ -206,7 +153,6 @@ export const createCalendarEvent = async ({
     description: sanitizeString(description, 5000),
     start,
     end,
-    // 3. Aplicamos los recordatorios personalizados si vienen, si no, usamos los de por defecto (citas)
     reminders: reminders || {
       useDefault: false,
       overrides: [
@@ -238,9 +184,12 @@ export const createCalendarEvent = async ({
   return eventId;
 };
 
+/**
+ * Patches an existing calendar event.
+ */
 export const updateCalendarEvent = async (
   googleEventId,
-  { title, description, startDateTime, endDateTime, allDayDate, reminders },
+  { title, description, startDateTime, allDayDate, reminders },
 ) => {
   if (!googleEventId || !GOOGLE_EVENT_ID_RE.test(googleEventId)) {
     throw new Error(`googleEventId inválido: ${googleEventId}`);
@@ -252,18 +201,20 @@ export const updateCalendarEvent = async (
 
   const event = {};
   if (title !== undefined) event.summary = sanitizeString(title, 200);
-  if (description !== undefined)
-    event.description = sanitizeString(description, 5000);
+  if (description !== undefined) event.description = sanitizeString(description, 5000);
 
   if (allDayDate) {
     const nextDay = new Date(allDayDate);
     nextDay.setDate(nextDay.getDate() + 1);
     event.start = { date: allDayDate };
     event.end = { date: nextDay.toISOString().split("T")[0] };
-  } else if (startDateTime && endDateTime) {
-    const dates = validateDates(startDateTime, endDateTime);
-    event.start = { dateTime: dates.start.toISOString(), timeZone: tz };
-    event.end = { dateTime: dates.end.toISOString(), timeZone: tz };
+  } else if (startDateTime) {
+    const startDate = new Date(startDateTime);
+    if (!isNaN(startDate.getTime())) {
+      event.start = { dateTime: startDate.toISOString(), timeZone: tz };
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      event.end = { dateTime: endDate.toISOString(), timeZone: tz };
+    }
   }
 
   if (reminders) {
@@ -282,6 +233,9 @@ export const updateCalendarEvent = async (
   );
 };
 
+/**
+ * Deletes a calendar event by its Google event ID.
+ */
 export const deleteCalendarEvent = async (googleEventId) => {
   if (!googleEventId || !GOOGLE_EVENT_ID_RE.test(googleEventId)) {
     throw new Error(`googleEventId inválido: ${googleEventId}`);
