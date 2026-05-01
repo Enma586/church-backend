@@ -88,10 +88,10 @@ export const findAllAppointments = async (query) => {
                     from: 'members',
                     localField: 'memberId',
                     foreignField: '_id',
-                    as: 'member'
+                    as: 'memberId'
                 }
             },
-            { $unwind: { path: '$member', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } },
             // NUEVO LOOKUP: Para el arreglo de participantes del cronograma
             {
                 $lookup: {
@@ -106,10 +106,10 @@ export const findAllAppointments = async (query) => {
                     from: 'users',
                     localField: 'createdBy',
                     foreignField: '_id',
-                    as: 'creator'
+                    as: 'creatorId'
                 }
             },
-            { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$creatorId', preserveNullAndEmptyArrays: true } }
         ],
         project: { 'creator.password': 0 }
     });

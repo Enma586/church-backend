@@ -4,55 +4,61 @@ import { APPOINTMENT_STATUS } from '../../constants/index.js';
 
 const EVENT_TYPES = ['cita_pastoral', 'evento_cronograma', 'bloqueo_agenda'];
 
-const createAppointmentSchema = z.object({
+// 1. Separamos los campos BASE sin los .refine()
+const baseAppointmentFields = z.object({
     type: z.enum(EVENT_TYPES).default('cita_pastoral'),
     memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
     participants: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
     title: z.string().trim().min(1, 'El título es requerido'),
     description: z.string().trim().optional(),
-    // Campos de fecha
     allDayDate: z.coerce.date().optional(),
     startDateTime: z.coerce.date().optional(),
     endDateTime: z.coerce.date().optional(),
-    // Nuevo campo
     extras: z.string().trim().optional(),
     status: z.enum(APPOINTMENT_STATUS).default('Programada')
-})
-.refine(data => {
-    // Validación lógica:
-    if (data.type === 'cita_pastoral') {
-        // Citas requieren miembro y horas inicio/fin
-        return data.memberId && data.startDateTime && data.endDateTime;
-    }
-    if (data.type === 'evento_cronograma') {
-        // Cronograma requiere fecha de todo el día
-        return !!data.allDayDate;
-    }
-    return true;
-}, { 
-    message: 'Faltan datos requeridos para el tipo de evento seleccionado', 
-    path: ['type'] 
-})
-.refine(data => {
-    if (data.startDateTime && data.endDateTime) {
-        return data.endDateTime > data.startDateTime;
-    }
-    return true;
-}, { 
-    message: 'La hora de fin debe ser posterior a la de inicio', 
-    path: ['endDateTime'] 
 });
 
-// El esquema de actualización (Update) debe seguir la misma lógica de campos
-const updateAppointmentSchema = createAppointmentSchema.partial().refine(data => {
-    if (data.startDateTime && data.endDateTime) {
-        return data.endDateTime > data.startDateTime;
-    }
-    return true;
-}, { message: 'La hora de fin debe ser posterior a la de inicio', path: ['endDateTime'] });
+// 2. Esquema de CREACIÓN (Usamos la base y le agregamos sus validaciones)
+const createAppointmentSchema = baseAppointmentFields
+    .refine(data => {
+        if (data.type === 'cita_pastoral') {
+            return data.memberId && data.startDateTime && data.endDateTime;
+        }
+        if (data.type === 'evento_cronograma') {
+            return !!data.allDayDate;
+        }
+        return true;
+    }, { 
+        message: 'Faltan datos requeridos para el tipo de evento seleccionado', 
+        path: ['type'] 
+    })
+    .refine(data => {
+        if (data.startDateTime && data.endDateTime) {
+            return data.endDateTime > data.startDateTime;
+        }
+        return true;
+    }, { 
+        message: 'La hora de fin debe ser posterior a la de inicio', 
+        path: ['endDateTime'] 
+    });
 
+// 3. Esquema de ACTUALIZACIÓN (Usamos la base + .partial() y sus validaciones)
+const updateAppointmentSchema = baseAppointmentFields.partial()
+    .refine(data => Object.keys(data).length > 0, {
+        message: 'Debe proporcionar al menos un campo para actualizar'
+    })
+    .refine(data => {
+        if (data.startDateTime && data.endDateTime) {
+            return data.endDateTime > data.startDateTime;
+        }
+        return true;
+    }, { 
+        message: 'La hora de fin debe ser posterior a la de inicio', 
+        path: ['endDateTime'] 
+    });
 
-export const queryAppointmentSchema = z.object({
+// 4. Esquema de QUERY (Para las búsquedas y filtros)
+const queryAppointmentSchema = z.object({
     ...paginationFields,
     status: z.enum(APPOINTMENT_STATUS).optional(),
     memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
@@ -60,5 +66,18 @@ export const queryAppointmentSchema = z.object({
     search: z.string().trim().optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
+}).refine(data => {
+    if (data.dateFrom && data.dateTo) {
+        return data.dateTo > data.dateFrom;
+    }
+    return true;
+}, { 
+    message: 'La fecha final debe ser posterior a la inicial', 
+    path: ['dateTo'] 
 });
-export { createAppointmentSchema, updateAppointmentSchema, queryAppointmentSchema };
+
+export {
+    createAppointmentSchema,
+    updateAppointmentSchema,
+    queryAppointmentSchema
+};
