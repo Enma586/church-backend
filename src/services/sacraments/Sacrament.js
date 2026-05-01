@@ -1,15 +1,22 @@
 import { Sacrament } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
+import { AppError } from '../../utils/AppError.js'
+
 
 export const createSacrament = async (data) => {
-    const sacrament = await Sacrament.create(data);
+    // One member = one sacrament record
+    const existing = await Sacrament.findOne({ memberId: data.memberId }).lean();
+    if (existing) {
+        throw new AppError('Este miembro ya tiene un registro sacramental. Edítalo para actualizarlo.', 409);
+    }
 
+    const sacrament = await Sacrament.create(data);
     const io = getIO();
     io.emit('sacrament:created', sacrament);
-
     return sacrament;
 };
+
 
 export const findAllSacraments = async (query) => {
     const { page, limit, type, memberId, dateFrom, dateTo } = query;

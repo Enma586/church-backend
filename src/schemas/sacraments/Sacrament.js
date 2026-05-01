@@ -16,17 +16,20 @@ const createSacramentSchema = z.object({
     memberId: z.string()
         .regex(/^[0-9a-fA-F]{24}$/, 'Un sacramento debe estar vinculado a un miembro'),
     type: z.enum(SACRAMENT_TYPE, { message: 'El tipo de sacramento es requerido' }),
-    date: z.coerce.date(),
-    place: z.string()
-        .trim()
-        .optional(),
-    celebrant: z.string()
-        .trim()
-        .optional(),
-    godparents: z.array(godparentSchema)
-        .optional()
-});
-
+    date: z.coerce.date().optional(),                            // ← optional
+    place: z.string().trim().optional(),
+    celebrant: z.string().trim().optional(),
+    godparents: z.array(godparentSchema).optional()
+}).refine(
+    data => {
+        // If type is not 'Ninguno', date is required
+        if (data.type !== 'Ninguno' && !data.date) {
+            return false;
+        }
+        return true;
+    },
+    { message: 'La fecha del sacramento es requerida', path: ['date'] }
+);
 const updateSacramentSchema = z.object({
     type: z.enum(SACRAMENT_TYPE)
         .optional(),

@@ -13,7 +13,7 @@ export const APPOINTMENT_STATUS = Object.freeze([
 ])
 
 export const SACRAMENT_TYPE = Object.freeze([
-    'Bautismo', 'Primera Comunión', 'Confirmación', 'Matrimonio'
+    'Bautismo', 'Primera Comunión', 'Confirmación', 'Ninguno'
 ])
 
 export const SYNC_STATUS = Object.freeze(['synced', 'pending_sync', 'failed', 'orphan'])
