@@ -125,19 +125,38 @@ const withRetry = async (fn, context = 'Google Calendar') => {
 
 const getTimezone = () => env.TZ;
 
-export const createCalendarEvent = async ({ title, description, startDateTime, endDateTime, attendeeEmail }) => {
-    const { start, end } = validateDates(startDateTime, endDateTime);
-
+// 1. Modificamos la firma para aceptar allDayDate y reminders
+export const createCalendarEvent = async ({ title, description, startDateTime, endDateTime, allDayDate, attendeeEmail, reminders }) => {
     const calendar = await getCalendarService();
     const calendarId = await getCalendarId();
     const tz = getTimezone();
 
+    let start, end;
+
+    // 2. Lógica inteligente de fechas
+    if (allDayDate) {
+        // La API de Google exige que el 'end' de un evento de todo el día sea el día siguiente
+        const nextDay = new Date(allDayDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const endAllDayStr = nextDay.toISOString().split('T')[0];
+
+        start = { date: allDayDate };
+        end = { date: endAllDayStr };
+    } else if (startDateTime && endDateTime) {
+        const dates = validateDates(startDateTime, endDateTime);
+        start = { dateTime: dates.start.toISOString(), timeZone: tz };
+        end = { dateTime: dates.end.toISOString(), timeZone: tz };
+    } else {
+        throw new Error('Se requiere allDayDate o startDateTime/endDateTime');
+    }
+
     const event = {
         summary: sanitizeString(title, 200),
         description: sanitizeString(description, 5000),
-        start: { dateTime: start.toISOString(), timeZone: tz },
-        end:   { dateTime: end.toISOString(),   timeZone: tz },
-        reminders: {
+        start,
+        end,
+        // 3. Aplicamos los recordatorios personalizados si vienen, si no, usamos los de por defecto (citas)
+        reminders: reminders || {
             useDefault: false,
             overrides: [
                 { method: 'email', minutes: 60 },
@@ -163,13 +182,9 @@ export const createCalendarEvent = async ({ title, description, startDateTime, e
     return eventId;
 };
 
-export const updateCalendarEvent = async (googleEventId, { title, description, startDateTime, endDateTime }) => {
+export const updateCalendarEvent = async (googleEventId, { title, description, startDateTime, endDateTime, allDayDate, reminders }) => {
     if (!googleEventId || !GOOGLE_EVENT_ID_RE.test(googleEventId)) {
         throw new Error(`googleEventId inválido: ${googleEventId}`);
-    }
-
-    if (startDateTime && endDateTime) {
-        validateDates(startDateTime, endDateTime);
     }
 
     const calendar = await getCalendarService();
@@ -179,8 +194,21 @@ export const updateCalendarEvent = async (googleEventId, { title, description, s
     const event = {};
     if (title !== undefined)       event.summary     = sanitizeString(title, 200);
     if (description !== undefined) event.description  = sanitizeString(description, 5000);
-    if (startDateTime)             event.start        = { dateTime: new Date(startDateTime).toISOString(), timeZone: tz };
-    if (endDateTime)               event.end          = { dateTime: new Date(endDateTime).toISOString(),   timeZone: tz };
+
+    if (allDayDate) {
+        const nextDay = new Date(allDayDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        event.start = { date: allDayDate };
+        event.end = { date: nextDay.toISOString().split('T')[0] };
+    } else if (startDateTime && endDateTime) {
+        const dates = validateDates(startDateTime, endDateTime);
+        event.start = { dateTime: dates.start.toISOString(), timeZone: tz };
+        event.end = { dateTime: dates.end.toISOString(), timeZone: tz };
+    }
+
+    if (reminders) {
+        event.reminders = reminders;
+    }
 
     await withRetry(
         () => calendar.events.patch({
