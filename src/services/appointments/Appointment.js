@@ -18,7 +18,6 @@ export const createAppointment = async (data) => {
         // Solo buscamos el correo si es una cita pastoral con un miembro específico
         if (data.memberId) {
             const member = await Member.findById(data.memberId).select('email').lean();
-            attendeeEmail = member?.email || undefined;
         }
 
         googleEventId = await createCalendarEvent({
@@ -27,7 +26,7 @@ export const createAppointment = async (data) => {
             startDateTime: data.startDateTime,
             // Si hay un allDayDate, lo convertimos a formato YYYY-MM-DD para Google
             allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
-            attendeeEmail,
+            
             // Le pedimos a Google que ponga un recordatorio 24 horas antes (1440 mins)
             reminders: {
                 useDefault: false,
