@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const page = z.coerce.number().int().min(1).default(1);
-const limit = z.coerce.number().int().min(1).max(100).default(10);
+const limit = z.coerce.number().int().min(1).max(1000).default(10);
 
 export const paginationFields = { page, limit };
 
