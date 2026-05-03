@@ -74,7 +74,13 @@ const getAuthClient = async () => {
 
 const getCalendarId = async () => {
   const config = await Configuration.findOne();
-  return config?.googleCalendarId || env.GOOGLE_CALENDAR_ID || "primary";
+  
+  // Si la BD dice "primary" (el valor por defecto) o está vacío, intenta usar el del .env
+  if (!config?.googleCalendarId || config.googleCalendarId === 'primary') {
+      return env.GOOGLE_CALENDAR_ID || 'primary';
+  }
+  
+  return config.googleCalendarId;
 };
 
 const getCalendarService = async () => {

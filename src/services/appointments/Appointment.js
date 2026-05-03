@@ -157,6 +157,13 @@ export const updateAppointment = async (id, data) => {
 
 export const removeAppointment = async (id) => {
     const existing = await Appointment.findById(id);
+    console.log('[Appointment] Borrando:', {
+        id,
+        hasGoogleId: !!existing?.googleEventId,
+        googleEventId: existing?.googleEventId,
+        type: existing?.type,
+        title: existing?.title,
+    });
 
     if (existing?.googleEventId) {
         try {
