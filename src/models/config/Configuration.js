@@ -10,6 +10,11 @@ const configurationSchema = new mongoose.Schema({
      * @section Google Integration
      * Configuration for the institutional Google Calendar.
      */
+    rolePermissions: {
+        type: Map,
+        of: [String],
+        default: {}
+    },
     googleCalendarId: {
         type: String,
         required: [true, 'El ID de Google Calendar es requerido'],
@@ -52,5 +57,6 @@ const configurationSchema = new mongoose.Schema({
     timestamps: true,
     collection: 'configuration' // Explicit name to keep it singular
 });
+
 
 export default mongoose.model('Configuration', configurationSchema);
