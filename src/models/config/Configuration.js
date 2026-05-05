@@ -52,6 +52,11 @@ const configurationSchema = new mongoose.Schema({
     },
     lastBackupDate: {
         type: Date
+    },
+    backupFrequencyDays: {
+        type: Number,
+        default: 7,
+        description: 'Frecuencia en días para realizar respaldos automáticos'
     }
 }, {
     timestamps: true,

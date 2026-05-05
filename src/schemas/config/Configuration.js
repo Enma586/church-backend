@@ -19,6 +19,11 @@ const configurationSchema = z.object({
         .trim()
         .default('Parroquia Local'),
     lastBackupDate: z.coerce.date()
+        .optional(),
+    backupFrequencyDays: z.number()
+        .int()
+        .min(1)
+        .default(7)
         .optional()
 });
 
