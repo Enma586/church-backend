@@ -1,1 +1,0 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"memberId":{"$numberInt":"1"}},"name":"memberId_1"}],"uuid":"e6ffef0e3a634c4a9af07cedbb4b23c6","collectionName":"pastoralnotes","type":"collection"}

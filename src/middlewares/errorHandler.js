@@ -1,6 +1,11 @@
 import { AppError } from '../utils/AppError.js';
 
 export const errorHandler = (err, req, res, next) => {
+    // Si los headers ya se enviaron (ej: stream en progreso), delega al manejador por defecto de Express
+    if (res.headersSent) {
+        return next(err);
+    }
+
     if (err.name === 'CastError') {
         err.statusCode = 400;
         err.message = `ID inválido: ${err.value}`;
