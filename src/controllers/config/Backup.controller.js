@@ -1,5 +1,5 @@
 import * as BackupService from "../../services/index.js";
-import Configuration from "../../models/config/Configuration.js";
+import { Configuration } from '../../models/index.js';
 import { getIO } from "../../config/socket.js";
 
 export const downloadBackup = async (req, res, next) => {
