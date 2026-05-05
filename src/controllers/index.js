@@ -28,7 +28,8 @@ import {
 
 // 5. Config Domain
 import { 
-    ConfigurationController 
+    ConfigurationController,
+    BackupController 
 } from './config/index.js';
 
 /**
@@ -42,5 +43,6 @@ export {
     AppointmentController,
     SacramentController,
     PastoralNoteController,
-    ConfigurationController
+    ConfigurationController,
+    BackupController
 };

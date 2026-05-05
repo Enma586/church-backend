@@ -4,3 +4,4 @@
  */
 export * from './Configuration.js';
 export * from './GoogleCalendar.js';
+export * from './Backup.js';
