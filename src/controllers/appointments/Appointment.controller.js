@@ -1,4 +1,4 @@
-import * as AppointmentService from '../../services/appointments/Appointment.js';
+import * as AppointmentService from '../../services/index.js';
 
 /**
  * @description Creates a new appointment.

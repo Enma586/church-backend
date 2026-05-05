@@ -1,4 +1,4 @@
-import * as MunicipalityService from '../../services/address/Municipality.js';
+import * as MunicipalityService from '../../services/index.js';
 
 /**
  * @description Controller to create a new municipality.

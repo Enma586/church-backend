@@ -1,4 +1,4 @@
-import * as PastoralNoteService from '../../services/sacraments/PastoralNote.js';
+import * as PastoralNoteService from '../../services/index.js';
 
 /**
  * @description Creates a pastoral note. Automatically assigns the logged user as author.

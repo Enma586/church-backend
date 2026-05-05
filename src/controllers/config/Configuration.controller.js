@@ -1,4 +1,4 @@
-import * as ConfigService from '../../services/config/Configuration.js';
+import * as ConfigService from '../../services/index.js';
 
 /**
  * @description Gets the global system configuration.

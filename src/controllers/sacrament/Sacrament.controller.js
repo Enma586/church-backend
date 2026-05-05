@@ -1,4 +1,4 @@
-import * as SacramentService from '../../services/sacraments/Sacrament.js';
+import * as SacramentService from '../../services/index.js';
 
 /**
  * @description Registers a new sacrament milestone for a member.

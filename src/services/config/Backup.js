@@ -77,8 +77,7 @@ export const createAndZipBackup = async (outputStream, config = null) => {
 
     // ── Fase 2: Empaquetado ZIP (solo para descarga manual) ──
     if (outputStream) {
-      // ✅ AHORA sí es seguro setear los headers: mongodump ya terminó con éxito
-      outputStream.attachment(`respaldo_parroquia_${date}.zip`);
+      // outputStream.attachment(`respaldo_parroquia_${date}.zip`);
 
       emitBackupEvent("backup:progress", {
         phase: "compressing",

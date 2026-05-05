@@ -1,4 +1,4 @@
-import * as UserService from "../../services/members/User.js";
+import * as UserService from '../../services/index.js';
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env.js";
 

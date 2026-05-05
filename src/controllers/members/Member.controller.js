@@ -1,4 +1,4 @@
-import * as MemberService from '../../services/members/Member.js';
+import * as MemberService from '../../services/index.js';
 
 /**
  * @description Creates a new member profile.

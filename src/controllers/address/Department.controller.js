@@ -1,4 +1,4 @@
-import * as DepartmentService from '../../services/address/Department.js';
+import * as DepartmentService from '../../services/index.js';
 
 /**
  * @description Controller to create a new department.
