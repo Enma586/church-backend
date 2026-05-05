@@ -1,3 +1,8 @@
 import configurationRoutes from './configuration.routes.js';
+import backupRoutes from './backup.routes.js';
 
-export default configurationRoutes;
+
+export {
+    configurationRoutes,
+    backupRoutes
+}
