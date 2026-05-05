@@ -1,15 +1,12 @@
-import * as BackupService from '../../services/config/Backup.js';
+import * as BackupService from '../../services/config/Backup.service.js';
 
-export const triggerBackup = async (req, res, next) => {
+export const downloadBackup = async (req, res, next) => {
     try {
-        const result = await BackupService.createManualBackup();
+        const date = new Date().toISOString().split('T')[0];
+        res.attachment(`respaldo_parroquia_${date}.zip`);
         
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result
-        });
+        await BackupService.createAndZipBackup(res);
     } catch (error) {
-        next(error); // Lo mandamos a tu manejador de errores global
+        next(error);
     }
 };
