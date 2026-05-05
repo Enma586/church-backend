@@ -24,7 +24,8 @@ const configurationSchema = z.object({
         .int()
         .min(1)
         .default(7)
-        .optional()
+        .optional(),
+    rolePermissions: z.record(z.string(), z.array(z.string())).optional(),   // ← AGREGAR
 });
 
 export {
