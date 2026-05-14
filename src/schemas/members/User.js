@@ -46,7 +46,7 @@ const queryUserSchema = z.object({
   search: z.string().trim().optional(),
 });
 
-export const registerSchema = z.object({
+const registerSchema = z.object({
   fullName: z.string().trim().min(1, "El nombre completo es requerido"),
   email: z
     .string()
@@ -62,4 +62,4 @@ export const registerSchema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
-export { createUserSchema, updateUserSchema, loginUserSchema, queryUserSchema };
+export { createUserSchema, updateUserSchema, loginUserSchema, queryUserSchema, registerSchema };
