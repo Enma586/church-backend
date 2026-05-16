@@ -5,6 +5,7 @@
 
 import mongoose from 'mongoose';
 import { AppError } from '../../utils/AppError.js';
+import { STADO_TYPE } from '../../constants/index.js'
 
 const journalLineSchema = new mongoose.Schema({
     account: {
@@ -49,8 +50,8 @@ const journalEntrySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['VALIDO', 'ANULADO'],
-        default: 'VALIDO'
+        enum: STADO_TYPE,
+        default: 'Valido'
     },
     lines: {
         type: [journalLineSchema],
