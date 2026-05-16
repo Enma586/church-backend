@@ -18,6 +18,7 @@ import { Member, User } from './members/index.js';
 // 5. Sacrament Domain (Spiritual Life)
 import { Sacrament, PastoralNote } from './sacrament/index.js';
 
+import { Account, Product, JournalEntry } from './accounting/index.js';
 /**
  * Clean export of all models.
  * Usage: import { Member, Sacrament, Appointment } from './models/index.js';
@@ -30,5 +31,8 @@ export {
     Member,
     User,
     Sacrament,
-    PastoralNote
+    PastoralNote,
+    Account,
+    Product,
+    JournalEntry
 };

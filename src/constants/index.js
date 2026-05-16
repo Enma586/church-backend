@@ -17,3 +17,7 @@ export const SACRAMENT_TYPE = Object.freeze([
 ])
 
 export const SYNC_STATUS = Object.freeze(['synced', 'pending_sync', 'failed', 'orphan'])
+
+export const CUENTA_TYPE = Object.freeze([
+'ACTIVO', 'PASIVO', 'PATRIMONIO', 'INGRESO', 'GASTO'
+])
