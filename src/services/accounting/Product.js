@@ -15,9 +15,9 @@ export const createProduct = async (data) => {
     if (!incomeAccount) {
         throw new AppError('La cuenta de ingreso especificada no existe', 404);
     }
-    if (incomeAccount.type !== 'INGRESO') {
+    if (incomeAccount.type !== 'Ingreso') {
         throw new AppError(
-            `La cuenta "${incomeAccount.code} - ${incomeAccount.name}" no es de tipo INGRESO`,
+            `La cuenta "${incomeAccount.code} - ${incomeAccount.name}" no es de tipo Ingreso`,
             400
         );
     }
@@ -75,9 +75,9 @@ export const updateProduct = async (id, data) => {
         if (!incomeAccount) {
             throw new AppError('La cuenta de ingreso especificada no existe', 404);
         }
-        if (incomeAccount.type !== 'INGRESO') {
+        if (incomeAccount.type !== 'Ingreso') {
             throw new AppError(
-                `La cuenta "${incomeAccount.code}" no es de tipo INGRESO`,
+                `La cuenta "${incomeAccount.code}" no es de tipo Ingreso`,
                 400
             );
         }
