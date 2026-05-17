@@ -140,7 +140,7 @@ export const updateJournalEntry = async (id, data) => {
     }
 
     // Solo se permite cambiar el status (anular)
-    if (existing.status === 'ANULADO') {
+    if (existing.status === 'Anulado') {
         throw new AppError('El asiento ya se encuentra anulado', 400);
     }
 
