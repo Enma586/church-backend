@@ -47,12 +47,30 @@ import {
     queryPastoralNoteSchema
 } from './sacraments/index.js';
 
-// 6. Pagination
+// 6. Accounting Domain (Financial)
+import {
+    createAccountSchema,
+    updateAccountSchema,
+    queryAccountSchema,
+    createProductSchema,
+    updateProductSchema,
+    queryProductSchema,
+    createJournalEntrySchema,
+    updateJournalEntrySchema,
+    queryJournalEntrySchema,
+    closePeriodSchema,
+    ledgerQuerySchema,
+    trialBalanceQuerySchema,
+    balanceSheetQuerySchema,
+    incomeStatementQuerySchema
+} from './accounting/index.js';
+
+// 7. Pagination
 import {
     paginationSchema
 } from './pagination.js';
 
-// 7. Params
+// 8. Params
 import {
     paramsIdSchema
 } from './params.js';
@@ -85,6 +103,20 @@ export {
     createPastoralNoteSchema,
     updatePastoralNoteSchema,
     queryPastoralNoteSchema,
+    createAccountSchema,
+    updateAccountSchema,
+    queryAccountSchema,
+    createProductSchema,
+    updateProductSchema,
+    queryProductSchema,
+    createJournalEntrySchema,
+    updateJournalEntrySchema,
+    queryJournalEntrySchema,
+    closePeriodSchema,
+    ledgerQuerySchema,
+    trialBalanceQuerySchema,
+    balanceSheetQuerySchema,
+    incomeStatementQuerySchema,
     paginationSchema,
     paramsIdSchema,
     registerSchema

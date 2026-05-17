@@ -17,3 +17,6 @@ export * from './members/index.js';
 
 // 5. Sacrament Domain (Spiritual Life)
 export * from './sacraments/index.js';
+
+// 6. Accounting Domain (Financial)
+export * from './accounting/index.js';

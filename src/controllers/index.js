@@ -1,6 +1,6 @@
 /**
  * @description Master entry point for all Controllers.
- * Centralizes the 5 domains for clean access in the routing layer.
+ * Centralizes the domains for clean access in the routing layer.
  */
 
 // 1. Address Domain
@@ -32,6 +32,15 @@ import {
     BackupController 
 } from './config/index.js';
 
+// 6. Accounting Domain
+import {
+    AccountController,
+    JournalController,
+    ProductController,
+    PeriodController,
+    ReportsController
+} from './accounting/index.js';
+
 /**
  * Clean export of all controller objects.
  */
@@ -44,5 +53,10 @@ export {
     SacramentController,
     PastoralNoteController,
     ConfigurationController,
-    BackupController
+    BackupController,
+    AccountController,
+    JournalController,
+    ProductController,
+    PeriodController,
+    ReportsController
 };
