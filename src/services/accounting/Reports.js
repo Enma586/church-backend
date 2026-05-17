@@ -241,7 +241,7 @@ export const getBalanceSheet = async (query) => {
 export const getIncomeStatement = async (query) => {
     const { dateFrom, dateTo } = query;
 
-    const match = { status: 'VALIDO' };
+    const match = { status: 'Valido' };
     if (dateFrom || dateTo) {
         match.date = {};
         if (dateFrom) match.date.$gte = new Date(dateFrom);

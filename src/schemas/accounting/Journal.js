@@ -36,7 +36,7 @@ export const createJournalEntrySchema = z.object({
 
 // ── Update (solo permite anular) ────────────────────────────────────────────────
 export const updateJournalEntrySchema = z.object({
-    status: z.enum(['VALIDO', 'ANULADO'], { message: 'Estado inválido' })
+    status: z.enum(['Valido', 'Anulado'], { message: 'Estado inválido' })
 });
 
 // ── Query ───────────────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export const queryJournalEntrySchema = z.object({
     ...paginationFields,
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
-    status: z.enum(['VALIDO', 'ANULADO']).optional(),
+    status: z.enum(['Valido', 'Anulado']).optional(),
     search: z.string().trim().optional()
 }).refine(
     data => {

@@ -19,7 +19,7 @@ export const closePeriod = async (date) => {
     // Verificar que no existan asientos desbalanceados hasta la fecha de cierre
     const unbalancedEntries = await JournalEntry.find({
         date: { $lte: closeDate },
-        status: 'VALIDO'
+        status: 'Valido'
     }).lean();
 
     // La validación de balance ya está en el pre-save del modelo,
