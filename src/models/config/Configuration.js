@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * @description Schema for global system settings. 
- * Stores Google API credentials, Calendar IDs, and WebSocket parameters.
+ * Stores Google API credentials, Calendar IDs, WebSocket parameters, and Accounting configuration.
  * Note: Only one document should exist in this collection.
  */
 const configurationSchema = new mongoose.Schema({
@@ -57,11 +57,26 @@ const configurationSchema = new mongoose.Schema({
         type: Number,
         default: 7,
         description: 'Frecuencia en días para realizar respaldos automáticos'
+    },
+
+    /**
+     * @section Accounting Settings
+     * Control parameters for financial periods and default automated transactions.
+     */
+    accountingClosedDate: {
+        type: Date,
+        default: null,
+        description: 'Fecha limite hasta la cual la contabilidad esta cerrada. Bloquea operaciones en fechas historicas.'
+    },
+    defaultCashAccountId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Account',
+        default: null,
+        description: 'Referencia a la cuenta de Activo/Caja liquida predeterminada para contrapartidas automatizadas.'
     }
 }, {
     timestamps: true,
     collection: 'configuration' // Explicit name to keep it singular
 });
-
 
 export default mongoose.model('Configuration', configurationSchema);

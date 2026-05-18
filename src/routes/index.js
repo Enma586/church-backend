@@ -10,6 +10,7 @@
  *   /api/sacraments     - Sacramental records
  *   /api/pastoral-notes - Pastoral follow-up notes
  *   /api/config         - System configuration
+ *   /api/accounting     - Financial accounting module
  */
 
 import { Router } from 'express';
@@ -17,7 +18,8 @@ import addressRoutes from './address/index.js';
 import { memberRoutes, userRoutes } from './members/index.js';
 import appointmentRoutes from './appointments/index.js';
 import { sacramentRoutes, pastoralNoteRoutes } from './sacrament/index.js';
-import {configurationRoutes, backupRoutes} from './config/index.js';
+import { configurationRoutes, backupRoutes } from './config/index.js';
+import accountingRoutes from './accounting/index.js';
 
 const router = Router();
 
@@ -29,6 +31,6 @@ router.use('/sacraments', sacramentRoutes);
 router.use('/pastoral-notes', pastoralNoteRoutes);
 router.use('/config', configurationRoutes);
 router.use('/config/backup', backupRoutes);
-
+router.use('/accounting', accountingRoutes);
 
 export default router;

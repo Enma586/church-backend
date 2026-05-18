@@ -17,10 +17,20 @@ const configurationSchema = new mongoose.Schema({
   notificationRefreshInterval: { type: Number, default: 60 },
   churchName: { type: String, required: true, default: 'Parroquia Local' },
   lastBackupDate: { type: Date },
+  backupFrequencyDays: { type: Number, default: 7 },
   rolePermissions: {
     type: Map,
     of: [String],
     default: {},
+  },
+  accountingClosedDate: {
+    type: Date,
+    default: null,
+  },
+  defaultCashAccountId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    default: null,
   },
 }, { timestamps: true, collection: 'configuration' });
 
@@ -28,11 +38,11 @@ const Configuration = mongoose.model('Configuration', configurationSchema);
 
 async function seedConfig() {
   await mongoose.connect(MONGO_URI);
-  console.log('✅ Conectado a MongoDB\n');
+  console.log('Conectado a MongoDB\n');
 
   // Remove existing config (singleton)
   await Configuration.deleteMany({});
-  console.log('🗑️  Configuración previa eliminada');
+  console.log('Configuración previa eliminada');
 
   await Configuration.create({
     churchName: 'Parroquia Local',
@@ -40,6 +50,9 @@ async function seedConfig() {
     googleServiceAccountEmail: '',
     enableLocalNotifications: true,
     notificationRefreshInterval: 60,
+    backupFrequencyDays: 7,
+    accountingClosedDate: null,
+    defaultCashAccountId: null,
     rolePermissions: {
       Coordinador: [
         'dashboard:view',
@@ -51,6 +64,7 @@ async function seedConfig() {
         'users:read', 'users:write',
         'roles:read', 'roles:write',
         'config:read', 'config:write',
+        'accounting:read', 'accounting:write',
       ],
       Subcoordinador: [
         'dashboard:view',
@@ -62,16 +76,17 @@ async function seedConfig() {
         'users:read',
         'roles:read',
         'config:read',
+        'accounting:read',
       ],
     },
   });
 
-  console.log('✅ Configuración inicial creada\n');
+  console.log('Configuración inicial creada\n');
   await mongoose.disconnect();
   process.exit(0);
 }
 
 seedConfig().catch((err) => {
-  console.error('❌ Error:', err.message);
+  console.error('Error:', err.message);
   process.exit(1);
 });
