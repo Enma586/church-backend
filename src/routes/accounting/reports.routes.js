@@ -1,7 +1,3 @@
-/**
- * @fileoverview Rutas REST para reportes contables (consultas de solo lectura).
- */
-
 import { Router } from "express";
 import { ReportsController } from "../../controllers/index.js";
 import { auth, validate } from "../../middlewares/index.js";
@@ -10,6 +6,7 @@ import {
   trialBalanceQuerySchema,
   balanceSheetQuerySchema,
   incomeStatementQuerySchema,
+  exportJournalPDFSchema,
 } from "../../schemas/index.js";
 
 const router = Router();
@@ -37,6 +34,14 @@ router.get(
   auth,
   validate(incomeStatementQuerySchema, "query"),
   ReportsController.incomeStatement,
+);
+
+// ── NUEVO: Exportar PDF ───────────────────────────────────────────
+router.get(
+  "/journal-pdf",
+  auth,
+  validate(exportJournalPDFSchema, "query"),
+  ReportsController.exportJournalPDF,
 );
 
 export default router;

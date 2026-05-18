@@ -39,3 +39,12 @@ export const incomeStatement = async (req, res, next) => {
     next(err);
   }
 };
+
+// ── NUEVO: Exportar journal a PDF ────────────────────────────────
+export const exportJournalPDF = async (req, res, next) => {
+  try {
+    await AccountingService.exportJournalPDF(req.query, res);
+  } catch (err) {
+    next(err);
+  }
+};

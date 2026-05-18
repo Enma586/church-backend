@@ -24,5 +24,6 @@ router.use('/journal-entries', journalRoutes);
 router.use('/products', productRoutes);
 router.use('/period', periodRoutes);
 router.use('/reports', reportRoutes);
+router.use('/cash-closings', cashClosingRoutes);
 
 export default router;
