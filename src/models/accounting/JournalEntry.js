@@ -1,35 +1,11 @@
 /**
- * @fileoverview Modelo de Mongoose para asientos contables (Journal Entries).
- * Garantiza el cumplimiento estricto del principio de partida doble.
+ * @fileoverview Modelo de Mongoose para asientos contables simplificados.
+ * Sistema de Ingreso/Egreso directo (sin partida doble).
  */
 
 import mongoose from 'mongoose';
 import { AppError } from '../../utils/AppError.js';
-import { STADO_TYPE } from '../../constants/index.js';
-
-const journalLineSchema = new mongoose.Schema({
-  account: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Account',
-    required: true,
-  },
-  debit: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  credit: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-  description: {
-    type: String,
-    trim: true,
-  },
-}, {
-  _id: false,
-});
+import { STADO_TYPE, JOURNAL_TYPE } from '../../constants/index.js';
 
 const journalEntrySchema = new mongoose.Schema({
   voucherNumber: {
@@ -43,19 +19,35 @@ const journalEntrySchema = new mongoose.Schema({
     required: true,
     default: Date.now,
   },
+  type: {
+    type: String,
+    enum: JOURNAL_TYPE,
+    required: true,
+  },
   concept: {
     type: String,
     required: true,
     trim: true,
   },
+  account: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    required: true,
+  },
+  product: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+    default: null,
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0.01,
+  },
   status: {
     type: String,
     enum: STADO_TYPE,
     default: 'Valido',
-  },
-  lines: {
-    type: [journalLineSchema],
-    required: true,
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -68,33 +60,12 @@ const journalEntrySchema = new mongoose.Schema({
 });
 
 /**
- * Hook de validación. En Mongoose 9 los hooks async NO reciben `next`.
- * Se usa throw para rechazar y return implícito para continuar.
+ * Hook pre-save: validar que el monto sea positivo y la cuenta exista.
  */
 journalEntrySchema.pre('save', async function () {
-  if (!this.lines || this.lines.length < 2) {
-    throw new AppError(
-      'Un asiento contable requiere un mínimo de dos líneas.',
-      400,
-    );
+  if (!this.amount || this.amount <= 0) {
+    throw new AppError('El monto debe ser mayor a cero.', 400);
   }
-
-  let totalDebit = 0;
-  let totalCredit = 0;
-
-  for (const line of this.lines) {
-    totalDebit += line.debit;
-    totalCredit += line.credit;
-  }
-
-  if (totalDebit !== totalCredit) {
-    throw new AppError(
-      `Descuadre financiero: Débitos L.${totalDebit.toFixed(2)} ≠ Créditos L.${totalCredit.toFixed(2)}.`,
-      400,
-    );
-  }
-
-  // async hook sin next: el return implícito equivale a next()
 });
 
 export default mongoose.model('JournalEntry', journalEntrySchema);

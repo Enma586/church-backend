@@ -19,7 +19,7 @@ import { Member, User } from './members/index.js';
 import { Sacrament, PastoralNote } from './sacrament/index.js';
 
 // 6. Accounting Domain (Financial)
-import { Account, Product, JournalEntry, Counter } from './accounting/index.js';
+import { Account, Product, JournalEntry, Counter, CashClosing } from './accounting/index.js';
 
 /**
  * Clean export of all models.
@@ -37,5 +37,6 @@ export {
     Account,
     Product,
     JournalEntry,
-    Counter
+    Counter,
+    CashClosing
 };

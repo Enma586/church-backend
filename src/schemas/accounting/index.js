@@ -26,5 +26,11 @@ export {
     ledgerQuerySchema,
     trialBalanceQuerySchema,
     balanceSheetQuerySchema,
-    incomeStatementQuerySchema
+    incomeStatementQuerySchema,
+    exportJournalPDFSchema
 } from './Reports.js';
+
+export {
+    createCashClosingSchema,
+    queryCashClosingSchema
+}from './CashClosing.js'
