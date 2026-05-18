@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-   "dev": "nodemon --ignore 'backups/**' --ignore 'backups/' index.js",
+    "dev": "nodemon --ignore 'backups/**' --ignore 'backups/' index.js",
     "start": "node index.js",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -26,6 +26,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1",
     "morgan": "^1.10.1",
+    "pdfkit": "^0.18.0",
     "socket.io": "^4.8.3",
     "zod": "^4.3.6"
   },

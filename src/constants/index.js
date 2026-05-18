@@ -23,3 +23,5 @@ export const CUENTA_TYPE = Object.freeze([
 ])
 
 export const STADO_TYPE = Object.freeze(['Valido', 'Anulado'])
+
+export const JOURNAL_TYPE = Object.freeze(['Ingreso', 'Egreso'])
