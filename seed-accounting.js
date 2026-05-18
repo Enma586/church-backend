@@ -22,8 +22,30 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/young-grou
 // Schemas inline (autocontenidos, sin barrel imports)
 // ═══════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════
+// Schemas inline (autocontenidos, sin barrel imports)
+// ═══════════════════════════════════════════════════════════════════════
+
 import { Schema } from 'mongoose';
 
+// ── Geografía (necesarios para crear miembro/usuario) ──────────────
+const departmentSchema = new Schema({
+  name: { type: String, required: true, unique: true },
+  isoCode: String,
+}, { timestamps: true });
+
+const municipalitySchema = new Schema({
+  name: { type: String, required: true },
+  departmentId: { type: Schema.Types.ObjectId, ref: 'Department', required: true, index: true },
+  code: String,
+}, { timestamps: true });
+
+municipalitySchema.index({ name: 1, departmentId: 1 });
+
+const Department  = mongoose.model('Department', departmentSchema);
+const Municipality = mongoose.model('Municipality', municipalitySchema);
+
+// ── Contabilidad ───────────────────────────────────────────────────
 const accountSchema = new Schema({
   code:       { type: String, required: true, unique: true, trim: true },
   name:       { type: String, required: true, trim: true },
@@ -80,13 +102,13 @@ const userSchema = new Schema({
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
+// Registrar modelos
 const Account       = mongoose.model('Account', accountSchema);
 const Product       = mongoose.model('Product', productSchema);
 const JournalEntry  = mongoose.model('JournalEntry', journalEntrySchema);
 const Counter       = mongoose.model('Counter', counterSchema);
 const Member        = mongoose.model('Member', memberSchema);
 const User          = mongoose.model('User', userSchema);
-
 // ═══════════════════════════════════════════════════════════════════════
 // Helper: generar número de comprobante
 // ═══════════════════════════════════════════════════════════════════════
@@ -120,12 +142,13 @@ async function seedAccounting() {
   console.log('   OK\n');
 
   // ── 2. Buscar/crear usuario de prueba ─────────────────────────────
+// ── 2. Buscar/crear usuario de prueba ─────────────────────────────
   console.log('👤 Preparando usuario de prueba...');
-  const dept = await mongoose.model('Department').findOne();
+  const dept = await Department.findOne();
   if (!dept) throw new Error('No hay departamentos. Corra seed-honduras.js primero');
 
-  const muni = await mongoose.model('Municipality').findOne({ departmentId: dept._id });
-  if (!muni) throw new Error('No hay municipios. Corra seed-honduras.js primero');
+  const muni = await Municipality.findOne({ departmentId: dept._id });
+  if (!muni) throw new Error('No hay municipios. Corra seed-honduras.js primero');;
 
   let user = await User.findOne({ username: 'contador' }).populate('memberId');
 
