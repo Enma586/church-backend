@@ -38,7 +38,8 @@ import {
     JournalController,
     ProductController,
     PeriodController,
-    ReportsController
+    ReportsController,
+    CashClosingController
 } from './accounting/index.js';
 
 /**
@@ -58,5 +59,6 @@ export {
     JournalController,
     ProductController,
     PeriodController,
-    ReportsController
+    ReportsController,
+    CashClosingController
 };

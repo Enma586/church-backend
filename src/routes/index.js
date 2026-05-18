@@ -32,6 +32,6 @@ router.use('/pastoral-notes', pastoralNoteRoutes);
 router.use('/config', configurationRoutes);
 router.use('/config/backup', backupRoutes);
 router.use('/accounting', accountingRoutes);
-router.use('/cash-closings', cashClosingRoutes);
+
 
 export default router;
