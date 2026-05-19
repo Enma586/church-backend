@@ -421,3 +421,43 @@ export const exportJournalPDF = async (query, res) => {
 
   doc.end();
 };
+
+// ── Saldo de caja esperado (para cierre de caja) ──────────────────────────────
+export const getCashBalance = async (query) => {
+  const { dateFrom, dateTo } = query;
+
+  const match = { status: 'Valido' };
+  if (dateFrom || dateTo) {
+    match.date = {};
+    if (dateFrom) match.date.$gte = new Date(dateFrom);
+    if (dateTo) match.date.$lte = new Date(dateTo);
+  }
+
+  const pipeline = [
+    { $match: match },
+    {
+      $group: {
+        _id: null,
+        totalIngresos: {
+          $sum: { $cond: [{ $eq: ['$type', 'Ingreso'] }, '$amount', 0] },
+        },
+        totalEgresos: {
+          $sum: { $cond: [{ $eq: ['$type', 'Egreso'] }, '$amount', 0] },
+        },
+        count: { $sum: 1 },
+      },
+    },
+  ];
+
+  const result = await JournalEntry.aggregate(pipeline);
+  const totals = result[0] ?? { totalIngresos: 0, totalEgresos: 0, count: 0 };
+
+  return {
+    totalIngresos: totals.totalIngresos,
+    totalEgresos: totals.totalEgresos,
+    saldoNeto: totals.totalIngresos - totals.totalEgresos,
+    count: totals.count,
+    dateFrom: dateFrom || null,
+    dateTo: dateTo || null,
+  };
+};

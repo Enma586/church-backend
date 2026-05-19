@@ -27,7 +27,8 @@ export {
     trialBalanceQuerySchema,
     balanceSheetQuerySchema,
     incomeStatementQuerySchema,
-    exportJournalPDFSchema
+    exportJournalPDFSchema,
+    cashBalanceQuerySchema
 } from './Reports.js';
 
 export {

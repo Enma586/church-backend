@@ -48,3 +48,12 @@ export const exportJournalPDF = async (req, res, next) => {
     next(err);
   }
 };
+
+export const cashBalance = async (req, res, next) => {
+  try {
+    const result = await AccountingService.getCashBalance(req.query);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+};

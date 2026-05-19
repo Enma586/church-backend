@@ -65,7 +65,8 @@ import {
     incomeStatementQuerySchema,
     createCashClosingSchema,
     queryCashClosingSchema,
-    exportJournalPDFSchema
+    exportJournalPDFSchema,
+    cashBalanceQuerySchema
 } from './accounting/index.js';
 
 // 7. Pagination
@@ -125,5 +126,6 @@ export {
     registerSchema,
     createCashClosingSchema,
     exportJournalPDFSchema,
-    queryCashClosingSchema
+    queryCashClosingSchema,
+    cashBalanceQuerySchema
 };

@@ -63,3 +63,16 @@ export const exportJournalPDFSchema = z.object({
   },
   { message: 'La fecha final debe ser posterior a la fecha inicial', path: ['dateTo'] }
 );
+
+export const cashBalanceQuerySchema = z.object({
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
+}).refine(
+  (data) => {
+    if (data.dateFrom && data.dateTo) {
+      return data.dateTo > data.dateFrom;
+    }
+    return true;
+  },
+  { message: 'La fecha final debe ser posterior a la fecha inicial', path: ['dateTo'] }
+);

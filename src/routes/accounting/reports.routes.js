@@ -7,6 +7,7 @@ import {
   balanceSheetQuerySchema,
   incomeStatementQuerySchema,
   exportJournalPDFSchema,
+  cashBalanceQuerySchema,
 } from "../../schemas/index.js";
 
 const router = Router();
@@ -42,6 +43,13 @@ router.get(
   auth,
   validate(exportJournalPDFSchema, "query"),
   ReportsController.exportJournalPDF,
+);
+
+router.get(
+  "/cash-balance",
+  auth,
+  validate(cashBalanceQuerySchema, "query"),
+  ReportsController.cashBalance,
 );
 
 export default router;
