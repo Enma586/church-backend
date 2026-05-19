@@ -7,9 +7,10 @@
 import { Configuration, JournalEntry } from '../../models/index.js';
 import { getIO } from '../../config/socket.js';
 import { AppError } from '../../utils/AppError.js';
+import { parseLocalDate } from '../../utils/date.js';
 
 export const closePeriod = async (date) => {
-  const closeDate = new Date(date);
+  const closeDate = parseLocalDate(date);
 
   if (closeDate > new Date()) {
     throw new AppError('No se puede cerrar el período con una fecha futura', 400);

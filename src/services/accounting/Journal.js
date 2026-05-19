@@ -7,6 +7,7 @@ import { JournalEntry, Account, Product, Counter } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
 import { AppError } from '../../utils/AppError.js';
+import { parseLocalDate } from '../../utils/date.js';
 
 // ── Generación atómica de número de comprobante ─────────────────────────────────
 const generateVoucherNumber = async (date) => {
@@ -52,14 +53,16 @@ export const createJournalEntry = async (data, userId) => {
     throw new AppError('El monto debe ser mayor a cero', 400);
   }
 
-  // Generar número de comprobante
-  const voucherNumber = await generateVoucherNumber(data.date);
+    // Generar número de comprobante
+    const entryDate = parseLocalDate(data.date) || new Date();
+    const voucherNumber = await generateVoucherNumber(entryDate);
 
-  const entry = await JournalEntry.create({
-    ...data,
-    voucherNumber,
-    createdBy: userId,
-  });
+    const entry = await JournalEntry.create({
+      ...data,
+      date: entryDate,
+      voucherNumber,
+      createdBy: userId,
+    });
 
   // Populate para respuesta completa
   const populated = await JournalEntry.findById(entry._id)
@@ -82,8 +85,8 @@ export const findAllJournalEntries = async (query) => {
   if (status) filter.status = status;
   if (dateFrom || dateTo) {
     filter.date = {};
-    if (dateFrom) filter.date.$gte = new Date(dateFrom);
-    if (dateTo) filter.date.$lte = new Date(dateTo);
+    if (dateFrom) filter.date.$gte = parseLocalDate(dateFrom);
+    if (dateTo) filter.date.$lte = parseLocalDate(dateTo);
   }
   if (search) {
     filter.$or = [
