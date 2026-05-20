@@ -25,5 +25,6 @@ export const env = {
     GOOGLE_CLIENT_EMAIL: process.env.GOOGLE_CLIENT_EMAIL,
     GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
     GOOGLE_CALENDAR_ID: process.env.GOOGLE_CALENDAR_ID,
+    GOOGLE_DRIVE_ID: process.env.GOOGLE_DRIVE_ID,   
     TZ: process.env.TZ || 'America/El_Salvador'
 }
