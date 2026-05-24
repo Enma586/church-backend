@@ -58,7 +58,7 @@ npm run test
 ### Ecosystem & Frontend Integration
 This backend does not serve HTML/CSS. It strictly serves JSON payloads to its companion desktop application.
 
-* ***Frontend Repository:*** [https://github.com/Enma586/church-frontend.git]
+* ***Frontend Repository:*** https://github.com/Enma586/church-frontend.git
 
 * ***Client Architecture:*** The client is a native desktop executable compiled via Tauri (Rust/React).
 
