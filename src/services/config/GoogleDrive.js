@@ -3,42 +3,34 @@ import fs from 'fs';
 import { AppError } from '../../utils/AppError.js';
 
 /**
- * Sube un archivo a una carpeta específica de Google Drive
- * usando la cuenta de servicio configurada en las variables de entorno.
- *
- * @param {string} filePath - Ruta absoluta del archivo a subir
- * @param {string} fileName - Nombre con el que se guardará en Drive
- * @returns {Promise<{ id: string, name: string, webViewLink: string }>}
+ * Sube un archivo a Google Drive usando OAuth 2.0 de usuario
+ * (las service accounts no tienen cuota de almacenamiento).
  */
 export const uploadToGoogleDrive = async (filePath, fileName) => {
   const folderId = process.env.GOOGLE_DRIVE_ID;
 
   if (!folderId) {
-    throw new AppError(
-      'GOOGLE_DRIVE_ID no está configurado en las variables de entorno',
-      500
-    );
+    throw new AppError('GOOGLE_DRIVE_ID no configurado en variables de entorno', 500);
   }
 
-  // Validar que el archivo existe
   if (!fs.existsSync(filePath)) {
     throw new AppError(`Archivo no encontrado: ${filePath}`, 500);
   }
 
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY
-    ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    : undefined;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  if (!refreshToken) {
+    throw new AppError('GOOGLE_REFRESH_TOKEN no configurado — necesario para Drive', 500);
+  }
 
-  // Cliente autenticado con la cuenta de servicio
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: privateKey,
-    },
-    scopes: ['https://www.googleapis.com/auth/drive.file'],
-  });
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    'http://localhost'
+  );
 
-  const drive = google.drive({ version: 'v3', auth });
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
   const fileMetadata = {
     name: fileName,
@@ -61,7 +53,7 @@ export const uploadToGoogleDrive = async (filePath, fileName) => {
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(
-    `[GoogleDrive] Archivo subido: ${data.name} (${duration}s)\n` +
+    `[GoogleDrive] ✅ Subido: ${data.name} (${duration}s)\n` +
     `   ID: ${data.id}\n` +
     `   Link: ${data.webViewLink}`
   );

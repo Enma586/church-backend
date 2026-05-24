@@ -6,7 +6,7 @@
 import { CashClosing, JournalEntry, Counter } from '../../models/index.js';
 import { getIO } from '../../config/socket.js';
 import { AppError } from '../../utils/AppError.js';
-import { parseLocalDate } from '../../utils/date.js';
+import { parseLocalDate, dateFromFilter, dateToFilter } from '../../utils/date.js';
 
 // Denominaciones de Honduras
 const HONDURAS_DENOMINATIONS = [
@@ -100,8 +100,8 @@ export const findAllCashClosings = async (query) => {
   const filter = {};
   if (dateFrom || dateTo) {
     filter.date = {};
-    if (dateFrom) filter.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) filter.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) filter.date.$lt = dateToFilter(dateTo);
   }
 
   const skip = (page - 1) * limit;

@@ -21,6 +21,6 @@ export const createCashClosingSchema = z.object({
 
 export const queryCashClosingSchema = z.object({
   ...paginationFields,
-  dateFrom: z.coerce.date().optional(),
-  dateTo: z.coerce.date().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
 });

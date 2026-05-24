@@ -12,7 +12,7 @@ const app = express()
 app.use(helmet())
 
 app.use(cors({
-    origin: env.CORS_ORIGIN,
+    origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN,
     credentials: true
 }))
 
@@ -20,6 +20,10 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
 
+app.use('/api', (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+})
 app.use('/api', routes)
 
 app.use(errorHandler)

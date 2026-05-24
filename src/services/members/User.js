@@ -20,7 +20,9 @@ export const findAllUsers = async (query) => {
 
     const filter = {};
     if (role) filter.role = role;
-    if (isActive !== undefined) filter.isActive = isActive;
+    if (isActive !== undefined) {
+        filter.isActive = isActive === 'true' || isActive === true;
+    }
     if (search) filter.username = { $regex: search, $options: 'i' };
 
     return await aggregatePaginate(User, {
@@ -54,7 +56,11 @@ export const updateUser = async (id, data) => {
         const salt = await bcrypt.genSalt(10);
         data.password = await bcrypt.hash(data.password, salt);
     }
-    const updated = await User.findByIdAndUpdate(id, data, { new: true, runValidators: true }).select('-password');
+    const updated = await User.findByIdAndUpdate(
+        id,
+        { $set: data },
+        { new: true, runValidators: true }
+    ).select('-password');
 
     const io = getIO();
     io.emit('user:updated', updated);
@@ -79,32 +85,4 @@ export const findUserByUsername = async (username) => {
 
 export const comparePassword = async (plainPassword, hashedPassword) => {
     return await bcrypt.compare(plainPassword, hashedPassword);
-};
-
-export const register = async ({ fullName, email, username, password }) => {
-  const member = await Member.create({
-    fullName,
-    email: email || undefined,
-    gender: 'Masculino',        // se puede cambiar desde el panel luego
-    dateOfBirth: new Date(),    // placeholder
-    departmentId: null,         // requiere datos reales — se completa después
-    municipalityId: null,
-    status: 'Activo',
-  });
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  const user = await User.create({
-    memberId: member._id,
-    username,
-    password: hashedPassword,
-    role: 'Subcoordinador',
-    isActive: true,
-  });
-
-  const userObj = user.toObject();
-  delete userObj.password;
-
-  return { user: userObj, member };
 };

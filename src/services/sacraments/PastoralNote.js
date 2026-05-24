@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { PastoralNote } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
@@ -15,8 +16,12 @@ export const findAllPastoralNotes = async (query) => {
     const { page, limit, memberId, isSensitive } = query;
 
     const filter = {};
-    if (memberId) filter.memberId = memberId;
-    if (isSensitive !== undefined) filter.isSensitive = isSensitive;
+    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
+        filter.memberId = new mongoose.Types.ObjectId(memberId);
+    }
+    if (isSensitive !== undefined) {
+        filter.isSensitive = isSensitive === 'true' || isSensitive === true;
+    }
 
     return await aggregatePaginate(PastoralNote, {
         filter,

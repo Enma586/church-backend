@@ -5,7 +5,7 @@ import { env } from '../config/env.js';
 
 export const auth = async (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        const token = (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null) || req.cookies.token;
 
         if (!token) {
             throw new AppError('No se proporcionó token de autenticación', 401);

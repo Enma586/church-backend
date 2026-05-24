@@ -7,7 +7,7 @@ import { JournalEntry, Account, Product, Counter } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
 import { AppError } from '../../utils/AppError.js';
-import { parseLocalDate } from '../../utils/date.js';
+import { parseLocalDate, dateFromFilter, dateToFilter } from '../../utils/date.js';
 
 // ── Generación atómica de número de comprobante ─────────────────────────────────
 const generateVoucherNumber = async (date) => {
@@ -85,8 +85,8 @@ export const findAllJournalEntries = async (query) => {
   if (status) filter.status = status;
   if (dateFrom || dateTo) {
     filter.date = {};
-    if (dateFrom) filter.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) filter.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) filter.date.$lt = dateToFilter(dateTo);
   }
   if (search) {
     filter.$or = [

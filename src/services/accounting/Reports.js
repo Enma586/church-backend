@@ -6,7 +6,7 @@
 import { JournalEntry, Account } from '../../models/index.js';
 import { getPagination, getPagingData } from '../../utils/pagination.js';
 import { AppError } from '../../utils/AppError.js';
-import { parseLocalDate } from '../../utils/date.js';
+import { parseLocalDate, dateFromFilter, dateToFilter } from '../../utils/date.js';
 import PDFDocument from 'pdfkit';
 
 // ── Libro Mayor ─────────────────────────────────────────────────────────────────
@@ -26,8 +26,8 @@ export const getLedger = async (query) => {
   };
   if (dateFrom || dateTo) {
     match.date = {};
-    if (dateFrom) match.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) match.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) match.date.$lt = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -82,8 +82,8 @@ export const getTrialBalance = async (query) => {
   const match = { status: 'Valido' };
   if (dateFrom || dateTo) {
     match.date = {};
-    if (dateFrom) match.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) match.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) match.date.$lt = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -97,6 +97,7 @@ export const getTrialBalance = async (query) => {
         totalEgresos: {
           $sum: { $cond: [{ $eq: ['$type', 'Egreso'] }, '$amount', 0] },
         },
+        count: { $sum: 1 },
       },
     },
     {
@@ -226,8 +227,8 @@ export const getIncomeStatement = async (query) => {
   const match = { status: 'Valido' };
   if (dateFrom || dateTo) {
     match.date = {};
-    if (dateFrom) match.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) match.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) match.date.$lt = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -307,8 +308,8 @@ export const exportJournalPDF = async (query, res) => {
   if (type) filter.type = type;
   if (dateFrom || dateTo) {
     filter.date = {};
-    if (dateFrom) filter.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) filter.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) filter.date.$lt = dateToFilter(dateTo);
   }
 
   const entries = await JournalEntry.find(filter)
@@ -430,8 +431,8 @@ export const getCashBalance = async (query) => {
   const match = { status: 'Valido' };
   if (dateFrom || dateTo) {
     match.date = {};
-    if (dateFrom) match.date.$gte = parseLocalDate(dateFrom);
-    if (dateTo) match.date.$lte = parseLocalDate(dateTo);
+    if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
+    if (dateTo) match.date.$lt = dateToFilter(dateTo);
   }
 
   const pipeline = [

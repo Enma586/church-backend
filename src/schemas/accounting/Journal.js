@@ -33,17 +33,17 @@ export const updateJournalEntrySchema = z.object({
 // ── Query ───────────────────────────────────────────────────────────────────────
 export const queryJournalEntrySchema = z.object({
   ...paginationFields,
-  dateFrom: z.coerce.date().optional(),
-  dateTo: z.coerce.date().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
   type: z.enum(['Ingreso', 'Egreso']).optional(),
   status: z.enum(['Valido', 'Anulado']).optional(),
   search: z.string().trim().optional(),
 }).refine(
   (data) => {
     if (data.dateFrom && data.dateTo) {
-      return data.dateTo > data.dateFrom;
+      return data.dateTo >= data.dateFrom;
     }
     return true;
   },
-  { message: 'La fecha final debe ser posterior a la fecha inicial', path: ['dateTo'] }
+  { message: 'La fecha final debe ser posterior o igual a la inicial', path: ['dateTo'] }
 );

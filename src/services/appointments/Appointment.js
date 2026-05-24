@@ -1,6 +1,8 @@
+import mongoose from 'mongoose';
 import { Appointment, Member } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
+import { dateFromFilter, dateToFilter } from '../../utils/date.js';
 import {
     createCalendarEvent,
     updateCalendarEvent,
@@ -59,14 +61,16 @@ export const findAllAppointments = async (query) => {
 
     const filter = {};
     if (status) filter.status = status;
-    if (memberId) filter.memberId = memberId;
+    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
+        filter.memberId = new mongoose.Types.ObjectId(memberId);
+    }
     if (type) filter.type = type; // 2. Aplicamos el filtro de tipo
     if (search) filter.title = { $regex: search, $options: 'i' };
     
     if (dateFrom || dateTo) {
         const dateQuery = {};
-        if (dateFrom) dateQuery.$gte = new Date(dateFrom);
-        if (dateTo) dateQuery.$lte = new Date(dateTo);
+        if (dateFrom) dateQuery.$gte = dateFromFilter(dateFrom);
+        if (dateTo) dateQuery.$lt = dateToFilter(dateTo);
         
         // 3. El filtro busca si la fecha cae en startDateTime (Citas) O en allDayDate (Cronograma)
         filter.$or = [

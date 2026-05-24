@@ -14,6 +14,6 @@ router.get('/', auth, validate(queryPastoralNoteSchema, 'query'), PastoralNoteCo
 router.get('/:id', auth, validate(paramsIdSchema, 'params'), PastoralNoteController.findById);
 router.post('/', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(createPastoralNoteSchema, 'body'), PastoralNoteController.create);
 router.put('/:id', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(paramsIdSchema, 'params'), validate(updatePastoralNoteSchema, 'body'), PastoralNoteController.update);
-router.delete('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), PastoralNoteController.remove);
+router.delete('/:id', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(paramsIdSchema, 'params'), PastoralNoteController.remove);
 
 export default router;

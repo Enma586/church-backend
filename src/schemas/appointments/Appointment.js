@@ -47,11 +47,11 @@ const queryAppointmentSchema = z.object({
     memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
     type: z.enum(EVENT_TYPES).optional(),
     search: z.string().trim().optional(),
-    dateFrom: z.coerce.date().optional(),
-    dateTo: z.coerce.date().optional(),
+    dateFrom: z.string().optional(),
+    dateTo: z.string().optional(),
 }).refine(data => {
     if (data.dateFrom && data.dateTo) {
-        return data.dateTo > data.dateFrom;
+        return data.dateTo >= data.dateFrom;
     }
     return true;
 }, { 

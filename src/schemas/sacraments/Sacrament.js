@@ -54,14 +54,14 @@ const querySacramentSchema = z.object({
     memberId: z.string()
         .regex(/^[0-9a-fA-F]{24}$/)
         .optional(),
-    dateFrom: z.coerce.date()
+    dateFrom: z.string()
         .optional(),
-    dateTo: z.coerce.date()
+    dateTo: z.string()
         .optional()
 }).refine(
     data => {
         if (data.dateFrom && data.dateTo) {
-            return data.dateTo > data.dateFrom;
+            return data.dateTo >= data.dateFrom;
         }
         return true;
     },

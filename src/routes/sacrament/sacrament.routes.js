@@ -14,6 +14,6 @@ router.get('/', auth, validate(querySacramentSchema, 'query'), SacramentControll
 router.get('/:id', auth, validate(paramsIdSchema, 'params'), SacramentController.findById);
 router.post('/', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(createSacramentSchema, 'body'), SacramentController.create);
 router.put('/:id', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(paramsIdSchema, 'params'), validate(updateSacramentSchema, 'body'), SacramentController.update);
-router.delete('/:id', auth, roleGuard('Coordinador'), validate(paramsIdSchema, 'params'), SacramentController.remove);
+router.delete('/:id', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(paramsIdSchema, 'params'), SacramentController.remove);
 
 export default router;

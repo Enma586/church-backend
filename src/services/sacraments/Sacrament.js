@@ -1,7 +1,9 @@
+import mongoose from 'mongoose';
 import { Sacrament } from '../../models/index.js';
 import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
 import { getIO } from '../../config/socket.js';
 import { AppError } from '../../utils/AppError.js'
+import { dateFromFilter, dateToFilter } from '../../utils/date.js';
 
 
 export const createSacrament = async (data) => {
@@ -23,11 +25,13 @@ export const findAllSacraments = async (query) => {
 
     const filter = {};
     if (type) filter.type = type;
-    if (memberId) filter.memberId = memberId;
+    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
+        filter.memberId = new mongoose.Types.ObjectId(memberId);
+    }
     if (dateFrom || dateTo) {
         filter.date = {};
-        if (dateFrom) filter.date.$gte = new Date(dateFrom);
-        if (dateTo) filter.date.$lte = new Date(dateTo);
+        if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
+        if (dateTo) filter.date.$lt = dateToFilter(dateTo);
     }
 
     return await aggregatePaginate(Sacrament, {

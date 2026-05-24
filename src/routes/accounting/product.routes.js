@@ -44,7 +44,7 @@ router.put(
 router.delete(
   "/:id",
   auth,
-  roleGuard("Coordinador"),
+  roleGuard("Coordinador", "Subcoordinador"),
   validate(paramsIdSchema, "params"),
   ProductController.remove,
 );

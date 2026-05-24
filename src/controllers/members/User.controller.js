@@ -28,15 +28,15 @@ export const login = async (req, res, next) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: false,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
     const userResponse = user.toObject();
     delete userResponse.password;
 
-    res.status(200).json({ success: true, data: userResponse });
+    res.status(200).json({ success: true, data: userResponse, token });
   } catch (err) {
     next(err);
   }
@@ -91,22 +91,3 @@ export const update = async (req, res, next) => {
   }
 };
 
-export const register = async (req, res, next) => {
-  try {
-    const { user, member } = await registerUser(req.body);
-
-    res.status(201).json({
-      success: true,
-      message: 'Cuenta creada exitosamente. Un coordinador revisará tus datos.',
-      data: {
-        user,
-        member: {
-          _id: member._id,
-          fullName: member.fullName,
-        },
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-};

@@ -12,10 +12,11 @@ const router = Router();
 router.put(
   "/close",
   auth,
-  roleGuard("Coordinador"),
+  roleGuard("Coordinador", "Subcoordinador"),
   validate(closePeriodSchema, "body"),
   PeriodController.close,
 );
-router.put("/reopen", auth, roleGuard("Coordinador"), PeriodController.reopen);
+
+router.put("/reopen", auth, roleGuard("Coordinador", "Subcoordinador"), PeriodController.reopen);
 
 export default router;
