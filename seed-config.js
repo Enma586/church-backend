@@ -84,11 +84,11 @@ async function seedConfig() {
   // ──────────────────────────────────────────────────
   // 1. CREAR USUARIO ADMIN (idempotente)
   // ──────────────────────────────────────────────────
-  console.log('Verificando usuario administrador...');
+  console.log('Verificando si ya existen usuarios...');
 
-  const existingUser = await User.findOne({ username: 'admin' });
+  const userCount = await User.countDocuments();
 
-  if (!existingUser) {
+  if (userCount === 0) {
     // Buscar un departamento y municipio (deben existir por seed-honduras.js)
     const dept = await Department.findOne();
     if (!dept) {
@@ -125,7 +125,7 @@ async function seedConfig() {
     console.log(`   Usuario creado: admin / admin123`);
     console.log(`      Rol: ${user.role}`);
   } else {
-    console.log(`    Usuario 'admin' ya existe — omitiendo creación`);
+    console.log(`    Ya existen usuarios — omitiendo creación del admin`);
   }
 
   // ──────────────────────────────────────────────────
