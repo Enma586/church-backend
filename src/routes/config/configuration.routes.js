@@ -13,7 +13,7 @@
  */
 
 import { Router } from 'express';
-import { ConfigurationController } from '../../controllers/index.js';
+import { ConfigurationController, SystemUpdateController } from '../../controllers/index.js';
 import { auth, roleGuard, validate } from '../../middlewares/index.js';
 import { configurationSchema } from '../../schemas/index.js';
 
@@ -32,5 +32,12 @@ router.get('/', auth, ConfigurationController.get);
  * @access  Administrator
  */
 router.put('/', auth, roleGuard('Coordinador', 'Subcoordinador'), validate(configurationSchema, 'body'), ConfigurationController.update);
+
+/**
+ * @route   POST /config/system-update
+ * @desc    Trigger Docker image update via Watchtower API
+ * @access  Administrator
+ */
+router.post('/system-update', auth, roleGuard('Coordinador', 'Subcoordinador'), SystemUpdateController.triggerSystemUpdate);
 
 export default router;

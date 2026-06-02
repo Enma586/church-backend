@@ -9,3 +9,5 @@ backups
 tests/
 vitest.config.js
 seed.js
+Dockerfile
+docker-compose.yml

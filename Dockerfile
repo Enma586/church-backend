@@ -18,8 +18,8 @@ WORKDIR /app
 # 4. Copiar dependencias primero (cache de capas)
 COPY package*.json ./
 
-# 5. Instalar dependencias
-RUN npm install
+# 5. Instalar dependencias exactas para producción
+RUN npm ci --only=production
 
 # 6. Copiar código fuente
 COPY . .

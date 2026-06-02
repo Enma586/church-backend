@@ -29,7 +29,8 @@ import {
 // 5. Config Domain
 import { 
     ConfigurationController,
-    BackupController 
+    BackupController,
+    SystemUpdateController,
 } from './config/index.js';
 
 // 6. Accounting Domain
@@ -55,6 +56,7 @@ export {
     PastoralNoteController,
     ConfigurationController,
     BackupController,
+    SystemUpdateController,
     AccountController,
     JournalController,
     ProductController,
