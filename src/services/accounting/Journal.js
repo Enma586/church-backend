@@ -86,7 +86,7 @@ export const findAllJournalEntries = async (query) => {
   if (dateFrom || dateTo) {
     filter.date = {};
     if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) filter.date.$lt = dateToFilter(dateTo);
+    if (dateTo) filter.date.$lte = dateToFilter(dateTo);
   }
   if (search) {
     filter.$or = [

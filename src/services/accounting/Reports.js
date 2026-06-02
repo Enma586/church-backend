@@ -27,7 +27,7 @@ export const getLedger = async (query) => {
   if (dateFrom || dateTo) {
     match.date = {};
     if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) match.date.$lt = dateToFilter(dateTo);
+    if (dateTo) match.date.$lte = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -83,7 +83,7 @@ export const getTrialBalance = async (query) => {
   if (dateFrom || dateTo) {
     match.date = {};
     if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) match.date.$lt = dateToFilter(dateTo);
+    if (dateTo) match.date.$lte = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -228,7 +228,7 @@ export const getIncomeStatement = async (query) => {
   if (dateFrom || dateTo) {
     match.date = {};
     if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) match.date.$lt = dateToFilter(dateTo);
+    if (dateTo) match.date.$lte = dateToFilter(dateTo);
   }
 
   const pipeline = [
@@ -309,7 +309,7 @@ export const exportJournalPDF = async (query, res) => {
   if (dateFrom || dateTo) {
     filter.date = {};
     if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) filter.date.$lt = dateToFilter(dateTo);
+    if (dateTo) filter.date.$lte = dateToFilter(dateTo);
   }
 
   const entries = await JournalEntry.find(filter)
@@ -432,7 +432,7 @@ export const getCashBalance = async (query) => {
   if (dateFrom || dateTo) {
     match.date = {};
     if (dateFrom) match.date.$gte = dateFromFilter(dateFrom);
-    if (dateTo) match.date.$lt = dateToFilter(dateTo);
+    if (dateTo) match.date.$lte = dateToFilter(dateTo);
   }
 
   const pipeline = [
