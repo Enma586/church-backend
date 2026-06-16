@@ -1,48 +1,36 @@
-import mongoose from "mongoose";
-import { SACRAMENT_TYPE } from "../../constants/index.js";
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { SACRAMENT_TYPE } from '../../constants/index.js'
 
-const sacramentSchema = new mongoose.Schema(
-  {
+const Sacrament = sequelize.define('Sacrament', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     memberId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Member",
-      required: [true, "Un sacramento debe estar vinculado a un miembro"],
-      index: true,
-      unique: true,
+        type: DataTypes.UUID,
+        allowNull: false,
+        unique: true,
     },
     type: {
-      type: String,
-      required: [true, "El tipo de sacramento es requerido"],
-      enum: SACRAMENT_TYPE,
+        type: DataTypes.ENUM(...SACRAMENT_TYPE),
+        allowNull: false,
     },
     date: {
-      type: Date,
-      required: [
-        function () {
-          // "this" hace referencia al documento que se está intentando guardar
-          return this.type !== "Ninguno";
-        },
-        "La fecha del sacramento es requerida",
-      ],
+        type: DataTypes.DATEONLY,
+        allowNull: true,
     },
     place: {
-      type: String,
-      trim: true,
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     celebrant: {
-      type: String,
-      trim: true,
+        type: DataTypes.STRING,
+        allowNull: true,
     },
-    godparents: [
-      {
-        name: { type: String, trim: true },
-        role: { type: String, default: "Padrino/Madrina" },
-      },
-    ],
-  },
-  {
-    timestamps: true,
-  },
-);
+}, {
+    tableName: 'sacraments',
+})
 
-export default mongoose.model("Sacrament", sacramentSchema);
+export default Sacrament

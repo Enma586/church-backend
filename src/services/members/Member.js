@@ -1,71 +1,102 @@
-import mongoose from 'mongoose';
-import { Member } from '../../models/index.js';
-import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
-import { getIO } from '../../config/socket.js';
+import { Op } from 'sequelize'
+import { Member, FamilyMember } from '../../models/index.js'
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js'
+import { getIO } from '../../config/socket.js'
 
 export const createMember = async (data) => {
-    const member = await Member.create(data);
-    const io = getIO();
-    io.emit('member:created', member);
-    return member;
-};
+    const { family, ...memberData } = data
+
+    const member = await Member.create(memberData)
+
+    if (family && family.length > 0) {
+        const familyRecords = family.map(f => ({ ...f, memberId: member._id }))
+        await FamilyMember.bulkCreate(familyRecords)
+    }
+
+    const created = await Member.findByPk(member._id, {
+        include: [
+            { association: 'department', attributes: ['_id', 'name', 'isoCode'] },
+            { association: 'municipality', attributes: ['_id', 'name', 'code'] },
+            { association: 'family' },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('member:created', created.toJSON())
+
+    return created
+}
 
 export const findAllMembers = async (query) => {
-    const { page, limit, status, gender, departmentId, search } = query;
+    const { page, limit, status, gender, departmentId, search } = query
 
-    const filter = {};
-    if (status) filter.status = status;
-    if (gender) filter.gender = gender;
-    // Cast string to ObjectId — $match in aggregation does NOT auto-cast
-    if (departmentId && mongoose.Types.ObjectId.isValid(departmentId)) {
-        filter.departmentId = new mongoose.Types.ObjectId(departmentId);
-    }
-    if (search) filter.fullName = { $regex: search, $options: 'i' };
+    const filter = {}
+    if (status) filter.status = status
+    if (gender) filter.gender = gender
+    if (departmentId) filter.departmentId = departmentId
+    if (search) filter.fullName = { [Op.iLike]: `%${search}%` }
 
     return await aggregatePaginate(Member, {
         filter,
         sort: { fullName: 1 },
         page,
         limit,
-        lookups: [
-            {
-                $lookup: {
-                    from: 'departments',
-                    localField: 'departmentId',
-                    foreignField: '_id',
-                    as: 'departmentId'
-                }
-            },
-            { $unwind: { path: '$departmentId', preserveNullAndEmptyArrays: true } },
-            {
-                $lookup: {
-                    from: 'municipalities',
-                    localField: 'municipalityId',
-                    foreignField: '_id',
-                    as: 'municipalityId'
-                }
-            },
-            { $unwind: { path: '$municipalityId', preserveNullAndEmptyArrays: true } }
-        ]
-    });
-};
+        include: [
+            { association: 'department', attributes: ['_id', 'name', 'isoCode'] },
+            { association: 'municipality', attributes: ['_id', 'name', 'code'] },
+        ],
+    })
+}
 
 export const findMemberById = async (id) => {
-    return await Member.findById(id)
-        .populate('departmentId', 'name isoCode')
-        .populate('municipalityId', 'name code');
-};
+    return await Member.findByPk(id, {
+        include: [
+            { association: 'department', attributes: ['_id', 'name', 'isoCode'] },
+            { association: 'municipality', attributes: ['_id', 'name', 'code'] },
+            { association: 'family' },
+        ],
+    })
+}
 
 export const updateMember = async (id, data) => {
-    const updated = await Member.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-    const io = getIO();
-    io.emit('member:updated', updated);
-    return updated;
-};
+    const { family, ...memberData } = data
+
+    const member = await Member.findByPk(id)
+    if (!member) return null
+
+    await member.update(memberData)
+
+    if (family !== undefined) {
+        await FamilyMember.destroy({ where: { memberId: id } })
+        if (family.length > 0) {
+            const familyRecords = family.map(f => ({ ...f, memberId: id }))
+            await FamilyMember.bulkCreate(familyRecords)
+        }
+    }
+
+    const updated = await Member.findByPk(id, {
+        include: [
+            { association: 'department', attributes: ['_id', 'name', 'isoCode'] },
+            { association: 'municipality', attributes: ['_id', 'name', 'code'] },
+            { association: 'family' },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('member:updated', updated.toJSON())
+
+    return updated
+}
 
 export const removeMember = async (id) => {
-    const deleted = await Member.findByIdAndDelete(id);
-    const io = getIO();
-    io.emit('member:deleted', { id });
-    return deleted;
-};
+    const member = await Member.findByPk(id)
+    if (!member) return null
+
+    await FamilyMember.destroy({ where: { memberId: id } })
+    await member.destroy()
+
+    const io = getIO()
+    io.emit('member:deleted', { id })
+
+    return member
+}

@@ -1,23 +1,23 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
 
-/**
- * @description Schema for the 18 departments of Honduras.
- * @requires name - Unique name of the department.
- */
-const departmentSchema = new mongoose.Schema({
+const Department = sequelize.define('Department', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     name: {
-        type: String,
-        required: [true, 'El nombre del departamento es requerido'],
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        trim: true
     },
     isoCode: {
-        type: String,
-        trim: true,
-        description: 'Código ISO estándar para reportes geográficos (ej. HN-FM)'
-    }
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
-    timestamps: true // Automatically manages createdAt and updatedAt
-});
+    tableName: 'departments',
+})
 
-export default mongoose.model('Department', departmentSchema);
+export default Department

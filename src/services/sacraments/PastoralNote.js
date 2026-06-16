@@ -1,26 +1,31 @@
-import mongoose from 'mongoose';
-import { PastoralNote } from '../../models/index.js';
-import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
-import { getIO } from '../../config/socket.js';
+import { Op } from 'sequelize'
+import { PastoralNote } from '../../models/index.js'
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js'
+import { getIO } from '../../config/socket.js'
 
 export const createPastoralNote = async (data) => {
-    const note = await PastoralNote.create(data);
+    const note = await PastoralNote.create(data)
 
-    const io = getIO();
-    io.emit('pastoral-note:created', note);
+    const created = await PastoralNote.findByPk(note._id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'author', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
 
-    return note;
-};
+    const io = getIO()
+    io.emit('pastoral-note:created', created.toJSON())
+
+    return created
+}
 
 export const findAllPastoralNotes = async (query) => {
-    const { page, limit, memberId, isSensitive } = query;
+    const { page, limit, memberId, isSensitive } = query
 
-    const filter = {};
-    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
-        filter.memberId = new mongoose.Types.ObjectId(memberId);
-    }
+    const filter = {}
+    if (memberId) filter.memberId = memberId
     if (isSensitive !== undefined) {
-        filter.isSensitive = isSensitive === 'true' || isSensitive === true;
+        filter.isSensitive = isSensitive === 'true' || isSensitive === true
     }
 
     return await aggregatePaginate(PastoralNote, {
@@ -28,50 +33,49 @@ export const findAllPastoralNotes = async (query) => {
         sort: { createdAt: -1 },
         page,
         limit,
-        lookups: [
-            {
-                $lookup: {
-                    from: 'members',
-                    localField: 'memberId',
-                    foreignField: '_id',
-                    as: 'memberId'
-                }
-            },
-            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'authorId',
-                    foreignField: '_id',
-                    as: 'authorId'
-                }
-            },
-            { $unwind: { path: '$authorId', preserveNullAndEmptyArrays: true } }
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'author', attributes: ['_id', 'username', 'role'] },
         ],
-        project: { 'author.password': 0 }
-    });
-};
+    })
+}
 
 export const findPastoralNoteById = async (id) => {
-    return await PastoralNote.findById(id)
-        .populate('memberId', 'fullName phone email')
-        .populate('authorId', 'username role');
-};
+    return await PastoralNote.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'author', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
+}
 
 export const updatePastoralNote = async (id, data) => {
-    const updated = await PastoralNote.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const note = await PastoralNote.findByPk(id)
+    if (!note) return null
 
-    const io = getIO();
-    io.emit('pastoral-note:updated', updated);
+    await note.update(data)
 
-    return updated;
-};
+    const updated = await PastoralNote.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'author', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('pastoral-note:updated', updated.toJSON())
+
+    return updated
+}
 
 export const removePastoralNote = async (id) => {
-    const deleted = await PastoralNote.findByIdAndDelete(id);
+    const note = await PastoralNote.findByPk(id)
+    if (!note) return null
 
-    const io = getIO();
-    io.emit('pastoral-note:deleted', { id });
+    await note.destroy()
 
-    return deleted;
-};
+    const io = getIO()
+    io.emit('pastoral-note:deleted', { id })
+
+    return note
+}

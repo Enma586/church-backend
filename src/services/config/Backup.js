@@ -60,14 +60,16 @@ export const createAndZipBackup = async (outputStream, config = null) => {
   });
 
   try {
-    // ── Fase 1: mongodump ──
+    // ── Fase 1: pg_dump ──
     emitBackupEvent("backup:progress", {
-      phase: "mongodump",
+      phase: "pg_dump",
       message: "Realizando dump de la base de datos...",
       date,
     });
 
-    const command = `mongodump --uri="${process.env.MONGO_URI}" --out="${backupPath}"`;
+    const pgDumpDir = path.join(backupPath, 'db_dump');
+    if (!fs.existsSync(pgDumpDir)) fs.mkdirSync(pgDumpDir, { recursive: true });
+    const command = `pg_dump "${process.env.DATABASE_URL}" --format=custom --file="${path.join(pgDumpDir, 'church_db.dump')}"`;
     await execPromise(command);
 
     emitBackupEvent("backup:progress", {

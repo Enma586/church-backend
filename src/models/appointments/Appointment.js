@@ -1,67 +1,59 @@
-import mongoose from 'mongoose';
-import { APPOINTMENT_STATUS, SYNC_STATUS } from '../../constants/index.js';
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { APPOINTMENT_STATUS, SYNC_STATUS } from '../../constants/index.js'
 
-const appointmentSchema = new mongoose.Schema({
+const Appointment = sequelize.define('Appointment', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     type: {
-        type: String,
-        enum: ['cita_pastoral', 'evento_cronograma', 'bloqueo_agenda'],
-        default: 'cita_pastoral',
-        index: true
+        type: DataTypes.ENUM('cita_pastoral', 'evento_cronograma', 'bloqueo_agenda'),
+        defaultValue: 'cita_pastoral',
     },
-    // Miembro para citas individuales (ahora opcional en DB)
     memberId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Member',
-        index: true
+        type: DataTypes.UUID,
+        allowNull: true,
     },
-    // Arreglo de miembros involucrados para eventos del cronograma
-    participants: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Member'
-    }],
     title: {
-        type: String,
-        required: [true, 'El título es requerido'],
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     description: {
-        type: String,
-        trim: true
+        type: DataTypes.TEXT,
+        allowNull: true,
     },
-    // Fecha para eventos de "Todo el día" (Cronograma)
     allDayDate: {
-        type: Date
+        type: DataTypes.DATEONLY,
+        allowNull: true,
     },
-    // Fechas para reuniones con hora específica (Citas)
     startDateTime: {
-        type: Date
+        type: DataTypes.DATE,
+        allowNull: true,
     },
-    // Reemplazo de observaciones y sugerencias
     extras: {
-        type: String,
-        trim: true
+        type: DataTypes.TEXT,
+        allowNull: true,
     },
     googleEventId: {
-        type: String
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     syncStatus: {
-        type: String,
-        enum: SYNC_STATUS,
-        default: 'synced',
-        index: true,
+        type: DataTypes.ENUM(...SYNC_STATUS),
+        defaultValue: 'synced',
     },
     status: {
-        type: String,
-        enum: APPOINTMENT_STATUS,
-        default: 'Programada'
+        type: DataTypes.ENUM(...APPOINTMENT_STATUS),
+        defaultValue: 'Programada',
     },
     createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    }
+        type: DataTypes.UUID,
+        allowNull: false,
+    },
 }, {
-    timestamps: true
-});
+    tableName: 'appointments',
+})
 
-export default mongoose.model('Appointment', appointmentSchema);
+export default Appointment

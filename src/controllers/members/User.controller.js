@@ -33,7 +33,7 @@ export const login = async (req, res, next) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    const userResponse = user.toObject();
+    const userResponse = user.toJSON();
     delete userResponse.password;
 
     res.status(200).json({ success: true, data: userResponse, token });

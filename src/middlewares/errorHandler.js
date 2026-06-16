@@ -1,49 +1,55 @@
-import { AppError } from '../utils/AppError.js';
+import { AppError } from '../utils/AppError.js'
 
 export const errorHandler = (err, req, res, next) => {
-    // Si los headers ya se enviaron (ej: stream en progreso), delega al manejador por defecto de Express
     if (res.headersSent) {
-        return next(err);
+        return next(err)
     }
 
-    if (err.name === 'CastError') {
-        err.statusCode = 400;
-        err.message = `ID inválido: ${err.value}`;
+    // ── Sequelize validation errors ──────────────────────────────────
+    if (err.name === 'SequelizeValidationError') {
+        err.statusCode = 400
+        err.message = err.errors.map(e => e.message).join(', ')
     }
 
-    if (err.code === 11000) {
-        const field = Object.keys(err.keyValue)[0];
+    if (err.name === 'SequelizeUniqueConstraintError') {
+        err.statusCode = 409
+        const field = err.errors?.[0]?.path || 'campo'
         const fieldLabels = {
             memberId: 'Miembro (ya tiene un usuario asignado)',
             username: 'Nombre de usuario',
             email: 'Correo electrónico',
             name: 'Nombre',
             fullName: 'Nombre completo',
-        };
-        const label = fieldLabels[field] || field;
-        err.statusCode = 409;
-        err.message = `Valor duplicado para: ${label}`;
+            code: 'Código',
+        }
+        const label = fieldLabels[field] || field
+        err.message = `Valor duplicado para: ${label}`
     }
 
-    if (err.name === 'ValidationError') {
-        err.statusCode = 400;
-        err.message = Object.values(err.errors).map(e => e.message).join(', ');
+    if (err.name === 'SequelizeForeignKeyConstraintError') {
+        err.statusCode = 400
+        err.message = 'Error de integridad referencial: el registro referenciado no existe'
     }
 
-    const statusCode = err.statusCode || 500;
+    if (err.name === 'SequelizeDatabaseError') {
+        err.statusCode = 400
+        err.message = `Error de base de datos: ${err.message}`
+    }
+
+    const statusCode = err.statusCode || 500
 
     const response = {
         success: false,
         message: err.message || 'Error interno del servidor',
-    };
+    }
 
     if (err.details) {
-        response.errors = err.details;
+        response.errors = err.details
     }
 
     if (process.env.NODE_ENV === 'development') {
-        response.stack = err.stack;
+        response.stack = err.stack
     }
 
-    res.status(statusCode).json(response);
-};
+    res.status(statusCode).json(response)
+}

@@ -1,71 +1,55 @@
-/**
- * @fileoverview Modelo de Mongoose para asientos contables simplificados.
- * Sistema de Ingreso/Egreso directo (sin partida doble).
- */
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { STADO_TYPE, JOURNAL_TYPE } from '../../constants/index.js'
 
-import mongoose from 'mongoose';
-import { AppError } from '../../utils/AppError.js';
-import { STADO_TYPE, JOURNAL_TYPE } from '../../constants/index.js';
-
-const journalEntrySchema = new mongoose.Schema({
-  voucherNumber: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true,
-  },
-  date: {
-    type: Date,
-    required: true,
-    default: Date.now,
-  },
-  type: {
-    type: String,
-    enum: JOURNAL_TYPE,
-    required: true,
-  },
-  concept: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  account: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Account',
-    required: true,
-  },
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    default: null,
-  },
-  amount: {
-    type: Number,
-    required: true,
-    min: 0.01,
-  },
-  status: {
-    type: String,
-    enum: STADO_TYPE,
-    default: 'Valido',
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+const JournalEntry = sequelize.define('JournalEntry', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
+    voucherNumber: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    date: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    type: {
+        type: DataTypes.ENUM(...JOURNAL_TYPE),
+        allowNull: false,
+    },
+    concept: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    account: {
+        type: DataTypes.UUID,
+        allowNull: false,
+    },
+    product: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        defaultValue: null,
+    },
+    amount: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false,
+        get() { const v = this.getDataValue('amount'); return v === null ? null : parseFloat(v); },
+    },
+    status: {
+        type: DataTypes.ENUM(...STADO_TYPE),
+        defaultValue: 'Valido',
+    },
+    createdBy: {
+        type: DataTypes.UUID,
+        allowNull: false,
+    },
 }, {
-  timestamps: true,
-  versionKey: false,
-});
+    tableName: 'journal_entries',
+})
 
-/**
- * Hook pre-save: validar que el monto sea positivo y la cuenta exista.
- */
-journalEntrySchema.pre('save', async function () {
-  if (!this.amount || this.amount <= 0) {
-    throw new AppError('El monto debe ser mayor a cero.', 400);
-  }
-});
-
-export default mongoose.model('JournalEntry', journalEntrySchema);
+export default JournalEntry

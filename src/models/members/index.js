@@ -1,11 +1,9 @@
-/**
- * @description Entry point for the Members domain.
- * Centralizes personal identity and system access (User) models.
- */
-import Member from './Member.js';
-import User from './User.js';
+import Member from './Member.js'
+import User from './User.js'
+import FamilyMember from './FamilyMember.js'
 
 export {
     Member,
-    User
-};
+    User,
+    FamilyMember,
+}

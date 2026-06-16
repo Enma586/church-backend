@@ -1,30 +1,22 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../../config/db.js'
 
-const PastoralNote = sequelize.define('PastoralNote', {
+const AppointmentParticipant = sequelize.define('AppointmentParticipant', {
     _id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
+    appointmentId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+    },
     memberId: {
         type: DataTypes.UUID,
         allowNull: false,
     },
-    authorId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-    },
-    content: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-    },
-    isSensitive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-    },
 }, {
-    tableName: 'pastoral_notes',
+    tableName: 'appointment_participants',
 })
 
-export default PastoralNote
+export default AppointmentParticipant

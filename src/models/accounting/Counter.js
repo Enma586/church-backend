@@ -1,22 +1,18 @@
-/**
- * @fileoverview Modelo de Mongoose para contadores atómicos.
- * Garantiza numeración secuencial sin race conditions para comprobantes contables.
- * Uso: Counter.findByIdAndUpdate(id, { $inc: { seq: 1 } }, { upsert: true, new: true })
- */
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
 
-import mongoose from 'mongoose';
-
-const counterSchema = new mongoose.Schema({
+const Counter = sequelize.define('Counter', {
     _id: {
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        primaryKey: true,
     },
     seq: {
-        type: Number,
-        default: 0
-    }
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
 }, {
-    versionKey: false
-});
+    tableName: 'counters',
+    timestamps: false,
+})
 
-export default mongoose.model('Counter', counterSchema);
+export default Counter

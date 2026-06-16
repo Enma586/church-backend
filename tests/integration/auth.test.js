@@ -1,62 +1,81 @@
-/**
- * @file tests/integration/auth.test.js
- * @description Integration tests for the Authentication middleware.
- * Verifies that the system correctly handles missing tokens, invalid signatures,
- * and inactive user accounts.
- */
-
-import request from 'supertest';
-import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
-import app from '../../app.js';
-import User from '../../src/models/members/User.js';
-import { env } from '../../src/config/env.js';
+import request from 'supertest'
+import jwt from 'jsonwebtoken'
+import app from '../../app.js'
+import { Department, Municipality, Member, User } from '../../src/models/index.js'
+import { env } from '../../src/config/env.js'
 
 describe('Integration: Authentication Middleware', () => {
-  beforeAll(() => {
-    process.env.NODE_ENV = 'test';
-  });
+    beforeAll(() => {
+        process.env.NODE_ENV = 'test'
+    })
 
-  const createTestUser = async (isActive = true) => {
-    const user = new User({
-      _id: new mongoose.Types.ObjectId(),
-      username: `user_${Date.now()}`,
-      password: 'hashed_password',
-      role: 'Subcoordinador',
-      isActive
-    });
-    await user.save({ validateBeforeSave: false });
-    return user;
-  };
+    const createTestUser = async (isActive = true) => {
+        const dept = await Department.create({ name: 'Test Dept' })
+        const muni = await Municipality.create({ name: 'Test Muni', departmentId: dept._id })
+        const member = await Member.create({
+            fullName: 'Test',
+            dateOfBirth: new Date('2000-01-01'),
+            gender: 'Masculino',
+            departmentId: dept._id,
+            municipalityId: muni._id,
+        })
+        const user = await User.create({
+            memberId: member._id,
+            username: `user_${Date.now()}`,
+            password: 'hashed_password',
+            role: 'Subcoordinador',
+            isActive,
+        })
+        return user
+    }
 
-  const signToken = (id, secret = env.JWT_SECRET) => {
-    return jwt.sign({ id }, secret, { expiresIn: '1h' });
-  };
+    const generateToken = (userId) => {
+        return jwt.sign({ id: userId }, env.JWT_SECRET || process.env.JWT_SECRET, { expiresIn: '1h' })
+    }
 
-  // Usamos una ruta protegida cualquiera (ej. /api/address/departments) para probar el middleware
-  const testRoute = '/api/address/departments';
+    it('should reject requests without a token (401)', async () => {
+        const response = await request(app).get('/api/address/departments')
+        expect(response.status).toBe(401)
+        expect(response.body.success).toBe(false)
+        expect(response.body.message).toContain('token')
+    })
 
-  it('should return 401 if token is manipulated or signed with a wrong secret', async () => {
-    const user = await createTestUser();
-    const fakeToken = signToken(user._id, 'wrong_secret_key');
-    
-    const response = await request(app)
-      .get(testRoute)
-      .set('Cookie', [`token=${fakeToken}`]);
+    it('should reject requests with an invalid token (401)', async () => {
+        const response = await request(app)
+            .get('/api/address/departments')
+            .set('Cookie', ['token=invalid_jwt_token'])
 
-    expect(response.status).toBe(401);
-    expect(response.body.message).toContain('Token inválido');
-  });
+        expect(response.status).toBe(401)
+        expect(response.body.success).toBe(false)
+    })
 
-  it('should return 401 if the user account has been deactivated', async () => {
-    const inactiveUser = await createTestUser(false); // isActive = false
-    const validToken = signToken(inactiveUser._id);
+    it('should reject requests with an expired token (401)', async () => {
+        const user = await createTestUser()
+        const expiredToken = jwt.sign(
+            { id: user._id },
+            env.JWT_SECRET || process.env.JWT_SECRET,
+            { expiresIn: '0s' }
+        )
 
-    const response = await request(app)
-      .get(testRoute)
-      .set('Cookie', [`token=${validToken}`]);
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
-    expect(response.status).toBe(401);
-    expect(response.body.message).toContain('desactivada');
-  });
-});
+        const response = await request(app)
+            .get('/api/address/departments')
+            .set('Cookie', [`token=${expiredToken}`])
+
+        expect(response.status).toBe(401)
+        expect(response.body.success).toBe(false)
+    })
+
+    it('should reject requests from inactive users (401)', async () => {
+        const inactiveUser = await createTestUser(false)
+        const token = generateToken(inactiveUser._id)
+
+        const response = await request(app)
+            .get('/api/address/departments')
+            .set('Cookie', [`token=${token}`])
+
+        expect(response.status).toBe(401)
+        expect(response.body.message).toContain('desactivada')
+    })
+})

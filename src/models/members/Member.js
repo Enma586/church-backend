@@ -1,62 +1,51 @@
-import mongoose from 'mongoose';
-import { GENDER, MEMBER_STATUS, FAMILY_RELATIONSHIP } from '../../constants/index.js';
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { GENDER, MEMBER_STATUS, FAMILY_RELATIONSHIP } from '../../constants/index.js'
 
-const memberSchema = new mongoose.Schema({
+const Member = sequelize.define('Member', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     fullName: {
-        type: String,
-        required: [true, 'El nombre completo es requerido'],
-        trim: true,
-        index: true
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     dateOfBirth: {
-        type: Date,
-        required: [true, 'La fecha de nacimiento es requerida']
+        type: DataTypes.DATEONLY,
+        allowNull: false,
     },
     gender: {
-        type: String,
-        enum: GENDER,
-        required: true
+        type: DataTypes.ENUM(...GENDER),
+        allowNull: false,
     },
     phone: {
-        type: String,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     email: {
-        type: String,
-        lowercase: true,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     departmentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department',
-        required: true
+        type: DataTypes.UUID,
+        allowNull: false,
     },
     municipalityId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Municipality',
-        required: true
+        type: DataTypes.UUID,
+        allowNull: false,
     },
     addressDetails: {
-        type: String,
-        trim: true
+        type: DataTypes.TEXT,
+        allowNull: true,
     },
-    family: [{
-        name: { type: String, required: true },
-        relationship: { 
-            type: String, 
-            required: true,
-            enum: FAMILY_RELATIONSHIP
-        },
-        contactNumber: { type: String, trim: true },
-        isMember: { type: Boolean, default: false }
-    }],
     status: {
-        type: String,
-        enum: MEMBER_STATUS,
-        default: 'Activo'
-    }
+        type: DataTypes.ENUM(...MEMBER_STATUS),
+        defaultValue: 'Activo',
+    },
 }, {
-    timestamps: true
-});
+    tableName: 'members',
+})
 
-export default mongoose.model('Member', memberSchema);
+export default Member

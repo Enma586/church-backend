@@ -1,46 +1,42 @@
-/**
- * @fileoverview Modelo de Mongoose para el catálogo de cuentas contables.
- * Soporta estructuras jerárquicas mediante referencias jerárquicas adyacentes.
- */
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { CUENTA_TYPE } from '../../constants/index.js'
 
-import mongoose from 'mongoose';
-import { CUENTA_TYPE } from '../../constants/index.js';
-
-const accountSchema = new mongoose.Schema({
+const Account = sequelize.define('Account', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     code: {
-        type: String,
-        required: true,
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        trim: true,
-        index: true
     },
     name: {
-        type: String,
-        required: true,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     type: {
-        type: String,
-        enum: CUENTA_TYPE,
-        required: true
+        type: DataTypes.ENUM(...CUENTA_TYPE),
+        allowNull: false,
     },
     parentAccount: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account',
-        default: null
+        type: DataTypes.UUID,
+        allowNull: true,
+        defaultValue: null,
     },
     acceptsTransactions: {
-        type: Boolean,
-        required: true,
-        default: true
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
     },
     isActive: {
-        type: Boolean,
-        default: true
-    }
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
 }, {
-    timestamps: true,
-    versionKey: false
-});
+    tableName: 'accounts',
+})
 
-export default mongoose.model('Account', accountSchema);
+export default Account

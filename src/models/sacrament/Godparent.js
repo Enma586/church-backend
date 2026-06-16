@@ -1,29 +1,26 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../../config/db.js'
 
-const Municipality = sequelize.define('Municipality', {
+const Godparent = sequelize.define('Godparent', {
     _id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    departmentId: {
+    sacramentId: {
         type: DataTypes.UUID,
         allowNull: false,
     },
-    code: {
+    name: {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    role: {
+        type: DataTypes.STRING,
+        defaultValue: 'Padrino/Madrina',
+    },
 }, {
-    tableName: 'municipalities',
-    indexes: [
-        { unique: true, fields: ['name', 'departmentId'] },
-    ],
+    tableName: 'godparents',
 })
 
-export default Municipality
+export default Godparent

@@ -1,7 +1,8 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../../config/db.js'
+import { FAMILY_RELATIONSHIP } from '../../constants/index.js'
 
-const PastoralNote = sequelize.define('PastoralNote', {
+const FamilyMember = sequelize.define('FamilyMember', {
     _id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -11,20 +12,24 @@ const PastoralNote = sequelize.define('PastoralNote', {
         type: DataTypes.UUID,
         allowNull: false,
     },
-    authorId: {
-        type: DataTypes.UUID,
+    name: {
+        type: DataTypes.STRING,
         allowNull: false,
     },
-    content: {
-        type: DataTypes.TEXT,
+    relationship: {
+        type: DataTypes.ENUM(...FAMILY_RELATIONSHIP),
         allowNull: false,
     },
-    isSensitive: {
+    contactNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    isMember: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
 }, {
-    tableName: 'pastoral_notes',
+    tableName: 'family_members',
 })
 
-export default PastoralNote
+export default FamilyMember

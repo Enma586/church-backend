@@ -1,15 +1,9 @@
 # 1. Base Node.js sobre Debian
 FROM node:20-bullseye
 
-# 2. Instalar mongodump desde el repo oficial de MongoDB 6.0
+# 2. Instalar pg_dump y herramientas PostgreSQL
 RUN apt-get update && \
-    apt-get install -y gnupg curl && \
-    curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | \
-      gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg && \
-    echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] http://repo.mongodb.org/apt/debian bullseye/mongodb-org/6.0 main" | \
-      tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
-    apt-get update && \
-    apt-get install -y mongodb-database-tools && \
+    apt-get install -y gnupg curl postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 # 3. Directorio de trabajo

@@ -1,33 +1,32 @@
-/**
- * @fileoverview Modelo de Mongoose para el catálogo de productos y servicios operacionales.
- * Abstrae la complejidad contable vinculando ítems directos a cuentas de ingresos.
- */
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
 
-import mongoose from 'mongoose';
-
-const productSchema = new mongoose.Schema({
+const Product = sequelize.define('Product', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     name: {
-        type: String,
-        required: true,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     defaultPrice: {
-        type: Number,
-        required: true,
-        default: 0
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: false,
+        defaultValue: 0,
+        get() { const v = this.getDataValue('defaultPrice'); return v === null ? null : parseFloat(v); },
     },
     incomeAccountId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account',
-        required: true
+        type: DataTypes.UUID,
+        allowNull: false,
     },
     isActive: {
-        type: Boolean,
-        default: true
-    }
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
 }, {
-    timestamps: true,
-    versionKey: false
-});
+    tableName: 'products',
+})
 
-export default mongoose.model('Product', productSchema);
+export default Product

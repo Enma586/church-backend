@@ -1,37 +1,47 @@
-import mongoose from 'mongoose';
-import { Sacrament } from '../../models/index.js';
-import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
-import { getIO } from '../../config/socket.js';
+import { Op } from 'sequelize'
+import { Sacrament, Godparent } from '../../models/index.js'
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js'
+import { getIO } from '../../config/socket.js'
 import { AppError } from '../../utils/AppError.js'
-import { dateFromFilter, dateToFilter } from '../../utils/date.js';
-
+import { dateFromFilter, dateToFilter } from '../../utils/date.js'
 
 export const createSacrament = async (data) => {
-    // One member = one sacrament record
-    const existing = await Sacrament.findOne({ memberId: data.memberId }).lean();
+    const existing = await Sacrament.findOne({ where: { memberId: data.memberId } })
     if (existing) {
-        throw new AppError('Este miembro ya tiene un registro sacramental. Edítalo para actualizarlo.', 409);
+        throw new AppError('Este miembro ya tiene un registro sacramental. Edítalo para actualizarlo.', 409)
     }
 
-    const sacrament = await Sacrament.create(data);
-    const io = getIO();
-    io.emit('sacrament:created', sacrament);
-    return sacrament;
-};
+    const { godparents, ...sacramentData } = data
+    const sacrament = await Sacrament.create(sacramentData)
 
+    if (godparents && godparents.length > 0) {
+        const godparentRecords = godparents.map(g => ({ ...g, sacramentId: sacrament._id }))
+        await Godparent.bulkCreate(godparentRecords)
+    }
+
+    const created = await Sacrament.findByPk(sacrament._id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'godparents' },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('sacrament:created', created.toJSON())
+
+    return created
+}
 
 export const findAllSacraments = async (query) => {
-    const { page, limit, type, memberId, dateFrom, dateTo } = query;
+    const { page, limit, type, memberId, dateFrom, dateTo } = query
 
-    const filter = {};
-    if (type) filter.type = type;
-    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
-        filter.memberId = new mongoose.Types.ObjectId(memberId);
-    }
+    const filter = {}
+    if (type) filter.type = type
+    if (memberId) filter.memberId = memberId
     if (dateFrom || dateTo) {
-        filter.date = {};
-        if (dateFrom) filter.date.$gte = dateFromFilter(dateFrom);
-        if (dateTo) filter.date.$lt = dateToFilter(dateTo);
+        filter.date = {}
+        if (dateFrom) filter.date[Op.gte] = dateFromFilter(dateFrom)
+        if (dateTo) filter.date[Op.lt] = dateToFilter(dateTo)
     }
 
     return await aggregatePaginate(Sacrament, {
@@ -39,38 +49,59 @@ export const findAllSacraments = async (query) => {
         sort: { date: -1 },
         page,
         limit,
-        lookups: [
-            {
-                $lookup: {
-                    from: 'members',
-                    localField: 'memberId',
-                    foreignField: '_id',
-                    as: 'memberId'
-                }
-            },
-            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } }
-        ]
-    });
-};
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'godparents' },
+        ],
+    })
+}
 
 export const findSacramentById = async (id) => {
-    return await Sacrament.findById(id).populate('memberId', 'fullName phone email');
-};
+    return await Sacrament.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'godparents' },
+        ],
+    })
+}
 
 export const updateSacrament = async (id, data) => {
-    const updated = await Sacrament.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const sacrament = await Sacrament.findByPk(id)
+    if (!sacrament) return null
 
-    const io = getIO();
-    io.emit('sacrament:updated', updated);
+    const { godparents, ...sacramentData } = data
+    await sacrament.update(sacramentData)
 
-    return updated;
-};
+    if (godparents !== undefined) {
+        await Godparent.destroy({ where: { sacramentId: id } })
+        if (godparents.length > 0) {
+            const godparentRecords = godparents.map(g => ({ ...g, sacramentId: id }))
+            await Godparent.bulkCreate(godparentRecords)
+        }
+    }
+
+    const updated = await Sacrament.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'godparents' },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('sacrament:updated', updated.toJSON())
+
+    return updated
+}
 
 export const removeSacrament = async (id) => {
-    const deleted = await Sacrament.findByIdAndDelete(id);
+    const sacrament = await Sacrament.findByPk(id)
+    if (!sacrament) return null
 
-    const io = getIO();
-    io.emit('sacrament:deleted', { id });
+    await Godparent.destroy({ where: { sacramentId: id } })
+    await sacrament.destroy()
 
-    return deleted;
-};
+    const io = getIO()
+    io.emit('sacrament:deleted', { id })
+
+    return sacrament
+}

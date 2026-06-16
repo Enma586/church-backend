@@ -1,37 +1,46 @@
-import mongoose from 'mongoose';
-import { USER_ROLE } from '../../constants/index.js';
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
+import { USER_ROLE } from '../../constants/index.js'
 
-const userSchema = new mongoose.Schema({
+const User = sequelize.define('User', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     memberId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Member',
-        required: [true, 'El usuario debe estar vinculado a un perfil de Miembro'],
-        unique: true
+        type: DataTypes.UUID,
+        allowNull: false,
+        unique: true,
     },
     username: {
-        type: String,
-        required: [true, 'El nombre de usuario es requerido'],
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        trim: true,
-        lowercase: true
     },
     password: {
-        type: String,
-        required: [true, 'La contraseña es requerida'],
-        select: false
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     role: {
-        type: String,
-        enum: USER_ROLE,
-        default: 'Subcoordinador',
-        required: true
+        type: DataTypes.ENUM(...USER_ROLE),
+        defaultValue: 'Subcoordinador',
+        allowNull: false,
     },
     isActive: {
-        type: Boolean,
-        default: true
-    }
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
 }, {
-    timestamps: true
-});
+    tableName: 'users',
+    defaultScope: {
+        attributes: { exclude: ['password'] },
+    },
+    scopes: {
+        withPassword: {
+            attributes: { include: ['password'] },
+        },
+    },
+})
 
-export default mongoose.model('User', userSchema);
+export default User

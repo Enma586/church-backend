@@ -1,190 +1,201 @@
-import mongoose from 'mongoose';
-import { Appointment, Member } from '../../models/index.js';
-import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
-import { getIO } from '../../config/socket.js';
-import { dateFromFilter, dateToFilter } from '../../utils/date.js';
+import { Op } from 'sequelize'
+import { Appointment, AppointmentParticipant, Member } from '../../models/index.js'
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js'
+import { getIO } from '../../config/socket.js'
+import { dateFromFilter, dateToFilter } from '../../utils/date.js'
 import {
     createCalendarEvent,
     updateCalendarEvent,
     deleteCalendarEvent,
     GoogleErrorType,
     classifyGoogleError,
-} from '../config/GoogleCalendar.js';
+} from '../config/GoogleCalendar.js'
 
 export const createAppointment = async (data) => {
-    let googleEventId;
-    let syncStatus = 'synced';
+    let googleEventId
+    let syncStatus = 'synced'
 
     try {
-        let attendeeEmail = undefined;
-        // Solo buscamos el correo si es una cita pastoral con un miembro específico
-        if (data.memberId) {
-            const member = await Member.findById(data.memberId).select('email').lean();
-        }
-
         googleEventId = await createCalendarEvent({
             title: data.title,
             description: data.description,
             startDateTime: data.startDateTime,
-            // Si hay un allDayDate, lo convertimos a formato YYYY-MM-DD para Google
             allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
-            
-            // Le pedimos a Google que ponga un recordatorio 24 horas antes (1440 mins)
             reminders: {
                 useDefault: false,
-                overrides: [{ method: 'popup', minutes: 1440 }]
-            }
-        });
+                overrides: [{ method: 'popup', minutes: 1440 }],
+            },
+        })
     } catch (error) {
-        const errorType = error._googleErrorType || classifyGoogleError(error);
-
+        const errorType = error._googleErrorType || classifyGoogleError(error)
         if (errorType === GoogleErrorType.FORBIDDEN || errorType === GoogleErrorType.INVALID_INPUT) {
-            console.error(`[GoogleCalendar] Fallo permanente al crear evento (${errorType}):`, error.message);
-            syncStatus = 'failed';
+            console.error(`[GoogleCalendar] Fallo permanente al crear evento (${errorType}):`, error.message)
+            syncStatus = 'failed'
         } else {
-            console.error(`[GoogleCalendar] Error al crear evento (${errorType}):`, error.message);
-            syncStatus = 'pending_sync';
+            console.error(`[GoogleCalendar] Error al crear evento (${errorType}):`, error.message)
+            syncStatus = 'pending_sync'
         }
     }
 
-    const appointment = await Appointment.create({ ...data, googleEventId, syncStatus });
+    const { participants, ...appointmentData } = data
+    const appointment = await Appointment.create({ ...appointmentData, googleEventId, syncStatus })
 
-    const io = getIO();
-    io.emit('appointment:created', appointment);
+    if (participants && participants.length > 0) {
+        const participantRecords = participants.map(memberId => ({
+            appointmentId: appointment._id,
+            memberId,
+        }))
+        await AppointmentParticipant.bulkCreate(participantRecords)
+    }
 
-    return appointment;
-};
+    const created = await Appointment.findByPk(appointment._id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            { association: 'participants', include: [{ association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] }] },
+            { association: 'creator', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('appointment:created', created.toJSON())
+
+    return created
+}
 
 export const findAllAppointments = async (query) => {
-    // 1. Agregamos "type" a la destructuración
-    const { page, limit, status, memberId, type, search, dateFrom, dateTo } = query;
+    const { page, limit, status, memberId, type, search, dateFrom, dateTo } = query
 
-    const filter = {};
-    if (status) filter.status = status;
-    if (memberId && mongoose.Types.ObjectId.isValid(memberId)) {
-        filter.memberId = new mongoose.Types.ObjectId(memberId);
-    }
-    if (type) filter.type = type; // 2. Aplicamos el filtro de tipo
-    if (search) filter.title = { $regex: search, $options: 'i' };
-    
+    const filter = {}
+    if (status) filter.status = status
+    if (memberId) filter.memberId = memberId
+    if (type) filter.type = type
+    if (search) filter.title = { [Op.iLike]: `%${search}%` }
+
     if (dateFrom || dateTo) {
-        const dateQuery = {};
-        if (dateFrom) dateQuery.$gte = dateFromFilter(dateFrom);
-        if (dateTo) dateQuery.$lt = dateToFilter(dateTo);
-        
-        // 3. El filtro busca si la fecha cae en startDateTime (Citas) O en allDayDate (Cronograma)
-        filter.$or = [
+        const dateQuery = {}
+        if (dateFrom) dateQuery[Op.gte] = dateFromFilter(dateFrom)
+        if (dateTo) dateQuery[Op.lt] = dateToFilter(dateTo)
+
+        filter[Op.or] = [
             { startDateTime: dateQuery },
-            { allDayDate: dateQuery }
-        ];
+            { allDayDate: dateQuery },
+        ]
     }
 
     return await aggregatePaginate(Appointment, {
         filter,
-        sort: { startDateTime: 1, allDayDate: 1 }, // Ordenar por ambas fechas posibles
+        sort: { startDateTime: 1, allDayDate: 1 },
         page,
         limit,
-        lookups: [
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
             {
-                $lookup: {
-                    from: 'members',
-                    localField: 'memberId',
-                    foreignField: '_id',
-                    as: 'memberId'
-                }
+                association: 'participants',
+                include: [{ association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] }],
             },
-            { $unwind: { path: '$memberId', preserveNullAndEmptyArrays: true } },
-            // NUEVO LOOKUP: Para el arreglo de participantes del cronograma
-            {
-                $lookup: {
-                    from: 'members',
-                    localField: 'participants',
-                    foreignField: '_id',
-                    as: 'participantsList' // Se llamará participantsList en el resultado
-                }
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'createdBy',
-                    foreignField: '_id',
-                    as: 'creatorId'
-                }
-            },
-            { $unwind: { path: '$creatorId', preserveNullAndEmptyArrays: true } }
+            { association: 'creator', attributes: ['_id', 'username', 'role'] },
         ],
-        project: { 'creator.password': 0 }
-    });
-};
+    })
+}
 
 export const findAppointmentById = async (id) => {
-    return await Appointment.findById(id)
-        .populate('memberId', 'fullName phone email')
-        .populate('participants', 'fullName phone email') // Poblamos los involucrados del cronograma
-        .populate('createdBy', 'username role');
-};
+    return await Appointment.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            {
+                association: 'participants',
+                include: [{ association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] }],
+            },
+            { association: 'creator', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
+}
 
 export const updateAppointment = async (id, data) => {
-    const existing = await Appointment.findById(id);
+    const appointment = await Appointment.findByPk(id)
+    if (!appointment) return null
 
-    if (existing?.googleEventId) {
+    if (appointment.googleEventId) {
         try {
-            await updateCalendarEvent(existing.googleEventId, {
+            await updateCalendarEvent(appointment.googleEventId, {
                 title: data.title,
                 description: data.description,
                 startDateTime: data.startDateTime,
                 allDayDate: data.allDayDate ? new Date(data.allDayDate).toISOString().split('T')[0] : undefined,
-            });
-            data.syncStatus = 'synced';
+            })
+            data.syncStatus = 'synced'
         } catch (error) {
-            const errorType = error._googleErrorType || classifyGoogleError(error);
-
+            const errorType = error._googleErrorType || classifyGoogleError(error)
             if (errorType === GoogleErrorType.NOT_FOUND) {
-                console.warn(`[GoogleCalendar] Evento ${existing.googleEventId} no existe en Google. Limpiando referencia.`);
-                data.googleEventId = undefined;
-                data.syncStatus = 'orphan';
+                console.warn(`[GoogleCalendar] Evento ${appointment.googleEventId} no existe en Google. Limpiando referencia.`)
+                data.googleEventId = undefined
+                data.syncStatus = 'orphan'
             } else {
-                console.error(`[GoogleCalendar] Error al actualizar evento (${errorType}):`, error.message);
-                data.syncStatus = 'pending_sync';
+                console.error(`[GoogleCalendar] Error al actualizar evento (${errorType}):`, error.message)
+                data.syncStatus = 'pending_sync'
             }
         }
     }
 
-    // Usamos returnDocument: 'after' para eliminar el warning de Mongoose
-    const updated = await Appointment.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true });
+    const { participants, ...updateData } = data
+    await appointment.update(updateData)
 
-    const io = getIO();
-    io.emit('appointment:updated', updated);
+    if (participants !== undefined) {
+        await AppointmentParticipant.destroy({ where: { appointmentId: id } })
+        if (participants.length > 0) {
+            const participantRecords = participants.map(memberId => ({
+                appointmentId: id,
+                memberId,
+            }))
+            await AppointmentParticipant.bulkCreate(participantRecords)
+        }
+    }
 
-    return updated;
-};
+    const updated = await Appointment.findByPk(id, {
+        include: [
+            { association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] },
+            {
+                association: 'participants',
+                include: [{ association: 'member', attributes: ['_id', 'fullName', 'phone', 'email'] }],
+            },
+            { association: 'creator', attributes: ['_id', 'username', 'role'] },
+        ],
+    })
+
+    const io = getIO()
+    io.emit('appointment:updated', updated.toJSON())
+
+    return updated
+}
 
 export const removeAppointment = async (id) => {
-    const existing = await Appointment.findById(id);
+    const appointment = await Appointment.findByPk(id)
+    if (!appointment) return null
+
     console.log('[Appointment] Borrando:', {
         id,
-        hasGoogleId: !!existing?.googleEventId,
-        googleEventId: existing?.googleEventId,
-        type: existing?.type,
-        title: existing?.title,
-    });
+        hasGoogleId: !!appointment.googleEventId,
+        googleEventId: appointment.googleEventId,
+        type: appointment.type,
+        title: appointment.title,
+    })
 
-    if (existing?.googleEventId) {
+    if (appointment.googleEventId) {
         try {
-            await deleteCalendarEvent(existing.googleEventId);
+            await deleteCalendarEvent(appointment.googleEventId)
         } catch (error) {
-            const errorType = error._googleErrorType || classifyGoogleError(error);
-
+            const errorType = error._googleErrorType || classifyGoogleError(error)
             if (errorType !== GoogleErrorType.NOT_FOUND) {
-                console.error(`[GoogleCalendar] Error al eliminar evento (${errorType}):`, error.message);
+                console.error(`[GoogleCalendar] Error al eliminar evento (${errorType}):`, error.message)
             }
         }
     }
 
-    const deleted = await Appointment.findByIdAndDelete(id);
+    await AppointmentParticipant.destroy({ where: { appointmentId: id } })
+    await appointment.destroy()
 
-    const io = getIO();
-    io.emit('appointment:deleted', { id });
+    const io = getIO()
+    io.emit('appointment:deleted', { id })
 
-    return deleted;
-};
+    return appointment
+}

@@ -1,82 +1,58 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize'
+import sequelize from '../../config/db.js'
 
-/**
- * @description Schema for global system settings. 
- * Stores Google API credentials, Calendar IDs, WebSocket parameters, and Accounting configuration.
- * Note: Only one document should exist in this collection.
- */
-const configurationSchema = new mongoose.Schema({
-    /**
-     * @section Google Integration
-     * Configuration for the institutional Google Calendar.
-     */
+const Configuration = sequelize.define('Configuration', {
+    _id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+    },
     rolePermissions: {
-        type: Map,
-        of: [String],
-        default: {}
+        type: DataTypes.JSONB,
+        defaultValue: {},
     },
     googleCalendarId: {
-        type: String,
-        required: [true, 'El ID de Google Calendar es requerido'],
-        trim: true,
-        default: 'primary'
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'primary',
     },
     googleServiceAccountEmail: {
-        type: String,
-        trim: true,
-        description: 'La dirección de correo de la Cuenta de Servicio de Google'
+        type: DataTypes.STRING,
+        allowNull: true,
     },
-    
-    /**
-     * @section WebSocket & Real-time Settings
-     * Control parameters for local notifications.
-     */
     enableLocalNotifications: {
-        type: Boolean,
-        default: true
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
     },
     notificationRefreshInterval: {
-        type: Number,
-        default: 60,
-        description: 'Intervalo en segundos para que el trabajo Cron verifique las próximas citas'
+        type: DataTypes.INTEGER,
+        defaultValue: 60,
     },
-
-    /**
-     * @section System Metadata
-     * General settings for the local Docker environment.
-     */
     churchName: {
-        type: String,
-        required: true,
-        default: 'Parroquia Local'
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'Parroquia Local',
     },
     lastBackupDate: {
-        type: Date
+        type: DataTypes.DATE,
+        allowNull: true,
     },
     backupFrequencyDays: {
-        type: Number,
-        default: 7,
-        description: 'Frecuencia en días para realizar respaldos automáticos'
+        type: DataTypes.INTEGER,
+        defaultValue: 7,
     },
-
-    /**
-     * @section Accounting Settings
-     * Control parameters for financial periods and default automated transactions.
-     */
     accountingClosedDate: {
-        type: Date,
-        default: null,
-        description: 'Fecha limite hasta la cual la contabilidad esta cerrada. Bloquea operaciones en fechas historicas.'
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        defaultValue: null,
     },
     defaultCashAccountId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account',
-        default: null,
-        description: 'Referencia a la cuenta de Activo/Caja liquida predeterminada para contrapartidas automatizadas.'
-    }
+        type: DataTypes.UUID,
+        allowNull: true,
+        defaultValue: null,
+    },
 }, {
-    timestamps: true,
-    collection: 'configuration' // Explicit name to keep it singular
-});
+    tableName: 'configuration',
+})
 
-export default mongoose.model('Configuration', configurationSchema);
+export default Configuration

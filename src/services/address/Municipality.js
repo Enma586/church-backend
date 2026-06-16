@@ -1,37 +1,41 @@
-import mongoose from 'mongoose';
-import { Municipality } from '../../models/index.js';
-import { aggregatePaginate } from '../../utils/aggregatePaginate.js';
+import { Op } from 'sequelize'
+import { Municipality } from '../../models/index.js'
+import { aggregatePaginate } from '../../utils/aggregatePaginate.js'
 
 export const createMunicipality = async (data) => {
-    return await Municipality.create(data);
-};
+    return await Municipality.create(data)
+}
 
 export const findAllMunicipalities = async (query) => {
-    const { page, limit, search, departmentId } = query;
+    const { page, limit, search, departmentId } = query
 
-    const filter = {};
-    if (search) filter.name = { $regex: search, $options: 'i' };
-    // Cast string to ObjectId — $match in aggregation does NOT auto-cast
-    if (departmentId && mongoose.Types.ObjectId.isValid(departmentId)) {
-        filter.departmentId = new mongoose.Types.ObjectId(departmentId);
-    }
+    const filter = {}
+    if (search) filter.name = { [Op.iLike]: `%${search}%` }
+    if (departmentId) filter.departmentId = departmentId
 
     return await aggregatePaginate(Municipality, {
         filter,
         sort: { name: 1 },
         page,
-        limit
-    });
-};
+        limit,
+    })
+}
 
 export const findMunicipalityById = async (id) => {
-    return await Municipality.findById(id).populate('departmentId', 'name isoCode');
-};
+    return await Municipality.findByPk(id, {
+        include: [{ association: 'department', attributes: ['_id', 'name', 'isoCode'] }],
+    })
+}
 
 export const updateMunicipality = async (id, data) => {
-    return await Municipality.findByIdAndUpdate(id, data, { new: true, runValidators: true });
-};
+    await Municipality.update(data, { where: { _id: id } })
+    return await Municipality.findByPk(id, {
+        include: [{ association: 'department', attributes: ['_id', 'name', 'isoCode'] }],
+    })
+}
 
 export const removeMunicipality = async (id) => {
-    return await Municipality.findByIdAndDelete(id);
-};
+    const mun = await Municipality.findByPk(id)
+    if (mun) await mun.destroy()
+    return mun
+}

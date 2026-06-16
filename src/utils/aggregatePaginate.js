@@ -1,30 +1,25 @@
 import { getPagination, getPagingData } from './pagination.js'
 
-export const aggregatePaginate = async (Model, { filter = {}, sort = {}, page = 1, limit = 10, lookups = [], project = {} }) => {
+export const aggregatePaginate = async (Model, { filter = {}, sort = {}, page = 1, limit = 10, include = [], attributes } = {}) => {
     const { skip, limit: pageSize } = getPagination(page, limit)
 
-    const pipeline = [
-        { $match: filter },
-        { $sort: sort },
-        {
-            $facet: {
-                metadata: [{ $count: 'total' }],
-                data: [
-                    { $skip: skip },
-                    { $limit: pageSize },
-                    ...lookups,
-                    ...(Object.keys(project).length ? [{ $project: project }] : [])
-                ]
-            }
-        }
-    ]
+    const order = Object.entries(sort).map(([key, dir]) => [key, dir === 1 ? 'ASC' : 'DESC'])
 
-    const [result] = await Model.aggregate(pipeline)
+    const [data, total] = await Promise.all([
+        Model.findAll({
+            where: filter,
+            order: order.length ? order : undefined,
+            offset: skip,
+            limit: pageSize,
+            include: include.length ? include : undefined,
+            attributes: attributes || undefined,
+            subQuery: false,
+        }),
+        Model.count({ where: filter }),
+    ])
 
-   const total = result?.metadata?.[0]?.total ?? 0;
-    const data = result?.data ?? [];
     return {
         data,
-        pagination: getPagingData(total, page, pageSize)
+        pagination: getPagingData(total, page, pageSize),
     }
 }

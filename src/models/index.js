@@ -1,42 +1,99 @@
-/**
- * @description Main entry point for the Database Layer.
- * Centralizes all domain models for clean imports throughout the application.
- */
+import sequelize from '../config/db.js'
 
-// 1. Address Domain (Geography)
-import { Department, Municipality } from './address/index.js';
+import { Department, Municipality } from './address/index.js'
+import { Appointment, AppointmentParticipant } from './appointments/index.js'
+import { Configuration } from './config/index.js'
+import { Member, User, FamilyMember } from './members/index.js'
+import { Sacrament, PastoralNote, Godparent } from './sacrament/index.js'
+import { Account, Product, JournalEntry, Counter, CashClosing, CashDenomination } from './accounting/index.js'
 
-// 2. Appointments Domain (Scheduling & Feedback)
-import { Appointment } from './appointments/index.js';
+// ── Address ─────────────────────────────────────────────────────────
+Department.hasMany(Municipality, { foreignKey: 'departmentId', as: 'municipalities' })
+Municipality.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' })
 
-// 3. Config Domain (System Brain)
-import { Configuration } from './config/index.js';
+// ── Members ─────────────────────────────────────────────────────────
+Department.hasMany(Member, { foreignKey: 'departmentId', as: 'members' })
+Member.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' })
 
-// 4. Members Domain (Identity & Security)
-import { Member, User } from './members/index.js';
+Municipality.hasMany(Member, { foreignKey: 'municipalityId', as: 'members' })
+Member.belongsTo(Municipality, { foreignKey: 'municipalityId', as: 'municipality' })
 
-// 5. Sacrament Domain (Spiritual Life)
-import { Sacrament, PastoralNote } from './sacrament/index.js';
+Member.hasMany(FamilyMember, { foreignKey: 'memberId', as: 'family' })
+FamilyMember.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
 
-// 6. Accounting Domain (Financial)
-import { Account, Product, JournalEntry, Counter, CashClosing } from './accounting/index.js';
+Member.hasOne(User, { foreignKey: 'memberId', as: 'user' })
+User.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
 
-/**
- * Clean export of all models.
- * Usage: import { Member, Sacrament, Appointment } from './models/index.js';
- */
+// ── Appointments ────────────────────────────────────────────────────
+Member.hasMany(Appointment, { foreignKey: 'memberId', as: 'appointments' })
+Appointment.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
+
+Appointment.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' })
+User.hasMany(Appointment, { foreignKey: 'createdBy', as: 'appointments' })
+
+Appointment.hasMany(AppointmentParticipant, { foreignKey: 'appointmentId', as: 'participants' })
+AppointmentParticipant.belongsTo(Appointment, { foreignKey: 'appointmentId', as: 'appointment' })
+AppointmentParticipant.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
+
+// ── Sacraments ──────────────────────────────────────────────────────
+Member.hasOne(Sacrament, { foreignKey: 'memberId', as: 'sacrament' })
+Sacrament.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
+
+Sacrament.hasMany(Godparent, { foreignKey: 'sacramentId', as: 'godparents' })
+Godparent.belongsTo(Sacrament, { foreignKey: 'sacramentId', as: 'sacrament' })
+
+// ── Pastoral Notes ──────────────────────────────────────────────────
+Member.hasMany(PastoralNote, { foreignKey: 'memberId', as: 'pastoralNotes' })
+PastoralNote.belongsTo(Member, { foreignKey: 'memberId', as: 'member' })
+
+PastoralNote.belongsTo(User, { foreignKey: 'authorId', as: 'author' })
+User.hasMany(PastoralNote, { foreignKey: 'authorId', as: 'pastoralNotes' })
+
+// ── Accounting: Account (self-referencing) ──────────────────────────
+Account.belongsTo(Account, { foreignKey: 'parentAccount', as: 'parentAccountData' })
+Account.hasMany(Account, { foreignKey: 'parentAccount', as: 'children' })
+
+// ── Accounting: Product ─────────────────────────────────────────────
+Product.belongsTo(Account, { foreignKey: 'incomeAccountId', as: 'incomeAccount' })
+Account.hasMany(Product, { foreignKey: 'incomeAccountId', as: 'products' })
+
+// ── Accounting: JournalEntry ────────────────────────────────────────
+JournalEntry.belongsTo(Account, { foreignKey: 'account', as: 'accountData' })
+Account.hasMany(JournalEntry, { foreignKey: 'account', as: 'journalEntries' })
+
+JournalEntry.belongsTo(Product, { foreignKey: 'product', as: 'productData' })
+Product.hasMany(JournalEntry, { foreignKey: 'product', as: 'journalEntries' })
+
+JournalEntry.belongsTo(User, { foreignKey: 'createdBy', as: 'createdByData' })
+User.hasMany(JournalEntry, { foreignKey: 'createdBy', as: 'journalEntries' })
+
+// ── Accounting: CashClosing ─────────────────────────────────────────
+CashClosing.belongsTo(User, { foreignKey: 'createdBy', as: 'createdByData' })
+User.hasMany(CashClosing, { foreignKey: 'createdBy', as: 'cashClosings' })
+
+CashClosing.hasMany(CashDenomination, { foreignKey: 'cashClosingId', as: 'denominations' })
+CashDenomination.belongsTo(CashClosing, { foreignKey: 'cashClosingId', as: 'cashClosing' })
+
+// ── Accounting: Counter ─────────────────────────────────────────────
+// No associations needed
+
 export {
+    sequelize,
     Department,
     Municipality,
     Appointment,
+    AppointmentParticipant,
     Configuration,
     Member,
     User,
+    FamilyMember,
     Sacrament,
     PastoralNote,
+    Godparent,
     Account,
     Product,
     JournalEntry,
     Counter,
-    CashClosing
-};
+    CashClosing,
+    CashDenomination,
+}

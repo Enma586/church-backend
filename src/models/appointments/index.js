@@ -1,9 +1,7 @@
-/**
- * @description Entry point for the Appointments domain.
- * Centralizes the appointment management logic.
- */
-import Appointment from './Appointment.js';
+import Appointment from './Appointment.js'
+import AppointmentParticipant from './AppointmentParticipant.js'
 
 export {
-    Appointment
-};
+    Appointment,
+    AppointmentParticipant,
+}
