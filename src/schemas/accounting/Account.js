@@ -6,8 +6,7 @@ import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 import { CUENTA_TYPE } from '../../constants/index.js';
 
-const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-const objectId = z.string().regex(objectIdRegex, 'ID de cuenta inválido');
+const objectId = z.string().uuid('ID de cuenta inválido');
 
 // ── Create ──────────────────────────────────────────────────────────────────────
 export const createAccountSchema = z.object({

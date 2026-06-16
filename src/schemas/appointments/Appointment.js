@@ -7,8 +7,8 @@ const EVENT_TYPES = ['cita_pastoral', 'evento_cronograma', 'bloqueo_agenda'];
 // 1. Separamos los campos BASE sin los .refine()
 const baseAppointmentFields = z.object({
     type: z.enum(EVENT_TYPES).default('cita_pastoral'),
-    memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-    participants: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
+    memberId: z.string().uuid().optional(),
+    participants: z.array(z.string().uuid()).optional(),
     title: z.string().trim().min(1, 'El título es requerido'),
     description: z.string().trim().optional(),
     allDayDate: z.coerce.date().optional(),
@@ -44,7 +44,7 @@ const updateAppointmentSchema = baseAppointmentFields.partial()
 const queryAppointmentSchema = z.object({
     ...paginationFields,
     status: z.enum(APPOINTMENT_STATUS).optional(),
-    memberId: z.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+    memberId: z.string().uuid().optional(),
     type: z.enum(EVENT_TYPES).optional(),
     search: z.string().trim().optional(),
     dateFrom: z.string().optional(),

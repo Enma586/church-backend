@@ -14,7 +14,7 @@ const godparentUpdateSchema = z.object({
 
 const createSacramentSchema = z.object({
     memberId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/, 'Un sacramento debe estar vinculado a un miembro'),
+        .uuid('Un sacramento debe estar vinculado a un miembro'),
     type: z.enum(SACRAMENT_TYPE, { message: 'El tipo de sacramento es requerido' }),
     date: z.coerce.date().optional(),                            // ← optional
     place: z.string().trim().optional(),
@@ -52,7 +52,7 @@ const querySacramentSchema = z.object({
     type: z.enum(SACRAMENT_TYPE)
         .optional(),
     memberId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
+        .uuid()
         .optional(),
     dateFrom: z.string()
         .optional(),

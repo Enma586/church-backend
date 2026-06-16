@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 
-const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-
 export const ledgerQuerySchema = z.object({
-  accountId: z.string().regex(objectIdRegex, 'ID de cuenta inválido'),
+  accountId: z.string().uuid('ID de cuenta inválido'),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   ...paginationFields,

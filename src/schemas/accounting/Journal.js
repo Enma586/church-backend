@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { paginationFields } from '../pagination.js';
 
-const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+
 
 // ── Create ──────────────────────────────────────────────────────────────────────
 export const createJournalEntrySchema = z.object({
@@ -16,9 +16,9 @@ export const createJournalEntrySchema = z.object({
     .trim()
     .min(1, 'El concepto del asiento es requerido'),
   account: z.string()
-    .regex(objectIdRegex, 'ID de cuenta inválido'),
+    .uuid('ID de cuenta inválido'),
   product: z.string()
-    .regex(objectIdRegex, 'ID de producto inválido')
+    .uuid('ID de producto inválido')
     .optional()
     .nullable(),
   amount: z.number()

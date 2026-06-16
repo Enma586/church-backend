@@ -24,10 +24,8 @@ const createMemberSchema = z.object({
         .toLowerCase()
         .optional()
         .or(z.literal('')),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/),
-    municipalityId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/),
+    departmentId: z.string().uuid(),
+    municipalityId: z.string().uuid(),
     addressDetails: z.string()
         .trim()
         .optional(),
@@ -54,12 +52,8 @@ const updateMemberSchema = z.object({
         .toLowerCase()
         .optional()
         .or(z.literal('')),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
-        .optional(),
-    municipalityId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
-        .optional(),
+    departmentId: z.string().uuid().optional(),
+    municipalityId: z.string().uuid().optional(),
     addressDetails: z.string()
         .trim()
         .optional(),
@@ -77,9 +71,7 @@ const queryMemberSchema = z.object({
         .optional(),
     gender: z.enum(GENDER)
         .optional(),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
-        .optional(),
+    departmentId: z.string().uuid().optional(),
     search: z.string()
         .trim()
         .optional()

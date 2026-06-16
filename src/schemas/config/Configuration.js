@@ -17,7 +17,7 @@ const configurationSchema = z.object({
   accountingClosedDate: z.coerce.date().nullable().optional(),
   defaultCashAccountId: z
     .string()
-    .regex(/^[0-9a-fA-F]{24}$/)
+    .uuid()
     .nullable()
     .optional(), // ← AGREGAR
 });

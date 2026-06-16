@@ -5,8 +5,7 @@ const createMunicipalitySchema = z.object({
     name: z.string()
         .trim()
         .min(1, 'El nombre del municipio es requerido'),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/, 'El municipio debe pertenecer a un departamento'),
+    departmentId: z.string().uuid('El municipio debe pertenecer a un departamento'),
     code: z.string()
         .trim()
         .optional()
@@ -16,9 +15,7 @@ const updateMunicipalitySchema = z.object({
     name: z.string()
         .trim()
         .optional(),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
-        .optional(),
+    departmentId: z.string().uuid().optional(),
     code: z.string()
         .trim()
         .optional()
@@ -31,9 +28,7 @@ const queryMunicipalitySchema = z.object({
     search: z.string()
         .trim()
         .optional(),
-    departmentId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
-        .optional()
+    departmentId: z.string().uuid().optional()
 });
 
 export {

@@ -5,10 +5,7 @@ import { USER_ROLE } from "../../constants/index.js";
 const createUserSchema = z.object({
   memberId: z
     .string()
-    .regex(
-      /^[0-9a-fA-F]{24}$/,
-      "El usuario debe estar vinculado a un perfil de Miembro",
-    ),
+    .uuid("El usuario debe estar vinculado a un perfil de Miembro"),
   username: z
     .string()
     .trim()

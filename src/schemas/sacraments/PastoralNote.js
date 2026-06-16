@@ -3,7 +3,7 @@ import { paginationFields } from '../pagination.js';
 
 const createPastoralNoteSchema = z.object({
     memberId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/, 'La nota debe estar vinculada a un miembro'),
+        .uuid('La nota debe estar vinculada a un miembro'),
     content: z.string()
         .trim()
         .min(1, 'El contenido de la nota no puede estar vacío'),
@@ -24,7 +24,7 @@ const updatePastoralNoteSchema = z.object({
 const queryPastoralNoteSchema = z.object({
     ...paginationFields,
     memberId: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/)
+        .uuid()
         .optional(),
     isSensitive: z.coerce.boolean()
         .optional()
