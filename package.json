@@ -7,7 +7,8 @@
     "dev": "nodemon --ignore 'backups/**' --ignore 'backups/' index.js",
     "start": "node index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "migrate": "node scripts/migrate.js"
   },
   "keywords": [],
   "author": "",

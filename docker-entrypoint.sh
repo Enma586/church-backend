@@ -27,30 +27,21 @@ if [ ! -f "$MARKER" ]; then
   echo "PRIMER ARRANQUE — Ejecutando seeders..."
   echo ""
 
-  # 1. Honduras (departamentos + municipios)
   echo "   [1/3] Ejecutando seed-honduras.js..."
   node seed-honduras.js
-  echo "   seed-honduras.js completado"
 
-  # 2. Config + Usuario admin
-  echo ""
-  echo "   [2/3] Ejecutando seed-config.js (config + usuario admin)..."
+  echo "   [2/3] Ejecutando seed-config.js..."
   node seed-config.js
-  echo "   seed-config.js completado"
 
-  # 3. Accounting
-  echo ""
   echo "   [3/3] Ejecutando seed-accounting.js..."
   node seed-accounting.js
-  echo "   seed-accounting.js completado"
 
-  # Marcar como sembrado
   touch "$MARKER"
   echo ""
-  echo "Seed completado. Archivo marcador creado en $MARKER"
+  echo "Seed completado"
 else
   echo ""
-  echo "ℹ El sistema ya fue sembrado anteriormente — omitiendo seeds"
+  echo "ℹ Sistema ya inicializado — omitiendo seeds"
 fi
 
 echo ""
